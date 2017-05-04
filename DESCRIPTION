@@ -1,0 +1,12 @@
+Package: discfrail
+Title: Discrete frailty for Cox model
+Version: 0.0.0.9000
+Authors@R: c( person("First", "Last", email = "first.last@example.com", role = c( "aut", "cre" ) ),
+              person("Second", "Last", email = "first.last@example.com", role = c( "aut") ) )
+Description: What the package does (one paragraph).
+Depends: R (>= 3.3.2)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports: Matrix, numDeriv, survival
+RoxygenNote: 6.0.1
