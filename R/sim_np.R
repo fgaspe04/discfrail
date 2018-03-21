@@ -18,7 +18,7 @@
 #' beta <- 1.6
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, Lambda_0_inv, rho, beta, p, w_values)
+#' data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 #' head( data )
 
 
@@ -46,8 +46,7 @@ simulWeibDiscreteFrailCovNPbaseInv <- function( N, S = NULL, beta, Lambda_0_inv,
   if( length(w) < N )
   {
     w <- c( w, tail( w, 1 ) )
-  }
-  if( length( w ) > N )
+  }else if( length( w ) > N )
   {
     length( w ) <- N
   }

@@ -25,42 +25,41 @@ exact_sec_der <- function( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz, lamsum)
 
   exact_der <- matrix(0, nrow=(K-1+K+ncovs), ncol=(K-1+K+ncovs))
 
-
   if( K > 1 )
   {
-    w_sum_haz <- matrix( unlist( lapply( 1:K, function(i) w[i] * sumhaz )), nrow = H, ncol= K)
-    denominator <- rowSums(matrix( unlist( lapply( 1:K, function(i) p[i]*w[i]^D )), nrow = H, ncol= K)*exp(-w_sum_haz))
-    numerator1 <- rowSums(matrix( unlist( lapply( 1:K, function(i) p[i]*w[i]^(D+1) )), nrow = H, ncol= K)*exp(-w_sum_haz))
-    numerator2 <- rowSums(matrix( unlist( lapply( 1:K, function(i) p[i]*w[i]^(D+2) )), nrow = H, ncol= K)*exp(-w_sum_haz))
+    w_sum_haz = matrix( unlist( lapply( 1:K, function(i) w[i] * sumhaz )), nrow = H, ncol= K)
+    denominator = rowSums(exp( matrix( unlist( lapply( 1:K, function(i) ( log(p[i]) + D*log(w[i])) )), nrow = H, ncol= K) -w_sum_haz))
+    numerator1 = rowSums(exp( matrix( unlist( lapply( 1:K, function(i) ( log(p[i]) + (D+1)*log(w[i])) )), nrow = H, ncol= K) -w_sum_haz))
+    numerator2 = rowSums(exp( matrix( unlist( lapply( 1:K, function(i) ( log(p[i]) + (D+2)*log(w[i])) )), nrow = H, ncol= K) -w_sum_haz))
   }else{
-    denominator <- numerator1 <- numerator2 <- exp(-sumhaz)
+    denominator = numerator1 = numerator2 = exp(-sumhaz)
   }
 
-  for( j in 1:H )
+  for( j in 1:H)
   {
 
-    if( K >= 2 ){
+    if(K>=2){
       for( g in 1:(K-1) )
       {
         #Pure term 1 #dim(dpdp) = (K-1)x(K-1)
         for( l in 1:(K-1) )
         {
-          d2p[ j, g, l] <- -(w[g]^D[j]*exp(-w[g]*sumhaz[j])-w[K]^D[j]*exp(-w[K]*sumhaz[j]))*(w[l]^D[j]*exp(-w[l]*sumhaz[j])-w[K]^D[j]*exp(-w[K]*sumhaz[j]))/(denominator[j])^2
+          d2p[ j, g, l] = -(exp(D[j]*log(w[g])-w[g]*sumhaz[j])-exp(D[j]*log(w[K])-w[K]*sumhaz[j]))*(exp(D[j]*log(w[l])-w[l]*sumhaz[j])-exp(D[j]*log(w[K])-w[K]*sumhaz[j]))/(denominator[j])^2
         }
 
         #Mixed term 1-2 #dim(d2pw) = (K-1)xK
         for(l in 1:K)
         {
-          d2pw[ j, g, l ] <- -(w[g]^D[j]*exp(-w[g]*sumhaz[j])-w[K]^D[j]*exp(-w[K]*sumhaz[j]))*(p[l]*w[l]^(D[j]-1)*exp(-w[l]*sumhaz[j])*(D[j]-w[l]*sumhaz[j]))/(denominator[j])^2+
-            + ifelse( l == g, w[l]^D[j]*exp(-w[l]*sumhaz[j])*(D[j]-w[l]*sumhaz[j])/denominator[j], 0) +
-            + ifelse( l == K, w[l]^D[j]*exp(-w[l]*sumhaz[j])*(D[j]-w[l]*sumhaz[j])/denominator[j], 0)
+          d2pw[ j, g, l ] = -(exp(D[j]*log(w[g])-w[g]*sumhaz[j])-exp(D[j]*log(w[K])-w[K]*sumhaz[j]))*(p[l]*exp((D[j]-1)*log(w[l])-w[l]*sumhaz[j])*(D[j]-w[l]*sumhaz[j]))/(denominator[j])^2+
+            + ifelse( l == g, exp(D[j]*log(w[l])-w[l]*sumhaz[j])*(D[j]-w[l]*sumhaz[j])/denominator[j], 0) +
+            + ifelse( l == K, exp(D[j]*log(w[l])-w[l]*sumhaz[j])*(D[j]-w[l]*sumhaz[j])/denominator[j], 0)
         }
 
         #Mixed term 1-3 #dim(d2pcov) = (K-1)xncovs
         for(r in 1:ncovs)
         {
-          d2pcov[ j, g, r ] <- dsumhaz[j,r] * ( (w[K]^(D[j]+1)*exp(-w[K]*sumhaz[j]) - w[g]^(D[j]+1)*exp(-w[g]*sumhaz[j]))/denominator[j] +
-                                                 -(w[K]^(D[j])*exp(-w[K]*sumhaz[j]) - w[g]^(D[j])*exp(-w[g]*sumhaz[j]))*numerator1[j]/(denominator[j])^2 )
+          d2pcov[ j, g, r ] = dsumhaz[j,r] * ( (exp((D[j]+1)*log(w[K])-w[K]*sumhaz[j]) - exp((D[j]+1)*log(w[g])-w[g]*sumhaz[j]))/denominator[j] +
+                                                 -(exp(D[j]*log(w[K])-w[K]*sumhaz[j]) - exp(D[j]*log(w[g])-w[g]*sumhaz[j]))*numerator1[j]/(denominator[j])^2 )
         }
 
       }
@@ -72,8 +71,8 @@ exact_sec_der <- function( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz, lamsum)
       for( l in 1:K )
       {
 
-        d2w[ j, g, l] <- -p[g]*p[l]*((w[g]*w[l])^(D[j]-1))*exp(-(w[g]+w[l])*sumhaz[j])*(D[j]-w[g]*sumhaz[j])*(D[j]-w[l]*sumhaz[j])/(denominator[j])^2+
-          + ifelse(g!=l, 0, p[g]*w[g]^(D[j]-2)*exp(-w[g]*sumhaz[j])*((D[j]-1-w[g]*sumhaz[j])*(D[j]-w[g]*sumhaz[j])-w[g]*sumhaz[j])/denominator[j])
+        d2w[ j, g, l] = -p[g]*p[l]*exp((D[j]-1)*log(w[g]*w[l])-(w[g]+w[l])*sumhaz[j])*(D[j]-w[g]*sumhaz[j])*(D[j]-w[l]*sumhaz[j])/(denominator[j])^2+
+          + ifelse(g!=l, 0, p[g]*exp((D[j]-2)*log(w[g])-w[g]*sumhaz[j])*((D[j]-1-w[g]*sumhaz[j])*(D[j]-w[g]*sumhaz[j])-w[g]*sumhaz[j])/denominator[j])
 
       }
     }
@@ -83,7 +82,7 @@ exact_sec_der <- function( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz, lamsum)
     {
       for(s in 1:ncovs)
       {
-        d2cov[ j, r, s ] <- lamsum[ j, r, s ]+ numerator2[j]/denominator[j]*(dsumhaz[j,r]*dsumhaz[j,s])+
+        d2cov[ j, r, s ] = lamsum[ j, r, s ]+ numerator2[j]/denominator[j]*(dsumhaz[j,r]*dsumhaz[j,s])+
           - numerator1[j]/denominator[j]*d2sumhaz[j,r,s] +
           - (numerator1[j]/denominator[j])^2*(dsumhaz[j,r]*dsumhaz[j,s])
       }
@@ -94,24 +93,25 @@ exact_sec_der <- function( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz, lamsum)
     {
       for(r in 1:ncovs)
       {
-        d2wcov[ j, g, r ] <- p[g] * w[g]^(D[j]-1) * exp(-w[g]*sumhaz[j]) * dsumhaz[j,r] * ( (-w[g]*(D[j]+1-w[g]*sumhaz[j]))/denominator[j]+
-                                                                                             + ((D[j]-w[g]*sumhaz[j])*numerator1[j])/(denominator[j])^2)
+        d2wcov[ j, g, r ] = p[g] * exp( (D[j]-1)*log(w[g]) - w[g]*sumhaz[j]) * dsumhaz[j,r] * ( (-w[g]*(D[j]+1-w[g]*sumhaz[j]))/denominator[j]+
+                                                                                                  + ((D[j]-w[g]*sumhaz[j])*numerator1[j])/(denominator[j])^2)
       }
     }
 
+
     if( K > 2 ){
-      exact_dertmp <- rbind( cbind(d2p[j, , ], d2pw[j, , ], d2pcov[j, , ]),
+      exact_dertmp = rbind( cbind(d2p[j, , ], d2pw[j, , ], d2pcov[j, , ]),
                             cbind(t(d2pw[j, , ]), d2w[j, , ], d2wcov[j, , ]),
                             cbind(t(d2pcov[j, , ]), t(d2wcov[j, , ]), d2cov[j, , ]) )
     }else if( K == 2 ){
-      exact_dertmp <- rbind( c(d2p[j, , ], d2pw[j, , ], d2pcov[j, , ]),
+      exact_dertmp = rbind( c(d2p[j, , ], d2pw[j, , ], d2pcov[j, , ]),
                             cbind(d2pw[j, , ], d2w[j, , ], d2wcov[j, , ]),
                             cbind(d2pcov[j, , ], t(d2wcov[j, , ]), d2cov[j, , ]) )
     }else if( K == 1 ){
-      exact_dertmp <- rbind( c(d2w[j, , ], d2wcov[j, , ]), cbind( d2wcov[j, , ], d2cov[j, , ] ) )
+      exact_dertmp = rbind( c(d2w[j, , ], d2wcov[j, , ]), cbind( d2wcov[j, , ], d2cov[j, , ] ) )
     }
 
-    exact_der <- exact_der  + exact_dertmp
+    exact_der = exact_der  + exact_dertmp
 
   }
   return(exact_der)
@@ -207,7 +207,7 @@ Iy <- function( ncovs, alpha, w, p, D, sumhaz, lamroutlam0, dsumhaz)
 
     #Pure term 2 #dim(dwdw) = K x K
 
-    dwdw[ j, ] <- alpha[ j, 1:K]*(D[j]/w[1:K]-sumhaz[j]) #( lamwoutlam0[ j, 1:K ] - dsumhazw[j,1:K] )
+    dwdw[ j, ] <- alpha[ j, 1:K]*(D[j]/w[1:K]-sumhaz[j])
 
 
     #Pure term 3 #dim(dcovdcov) = ncovs x ncovs

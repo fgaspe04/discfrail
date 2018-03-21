@@ -49,8 +49,7 @@ simulWeibDiscreteFrail <- function( N, S = NULL, lambda, rho, beta, p, w_values 
   if( length( w ) < N )
   {
     w <- c( w, tail( w, 1 ) )
-  }
-  else if( length( w ) > N )
+  }else if( length( w ) > N )
   {
     length( w ) <-  N
   }

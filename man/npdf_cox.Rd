@@ -35,7 +35,7 @@ Lambda_0_inv = function( t, c=0.01, d=4.6 ) ( t^( 1/d ) )/c
 beta <- 1.6
 p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
-data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, Lambda_0_inv, rho, beta, p, w_values)
+data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 
 test_res <- npdf_cox( data, time = 'time', status = 'status', family = 'family', covariates = c('x'), population = 4, eps_conv=10^-4)
 best_model_llik <- test_res[[5]] #population+1
