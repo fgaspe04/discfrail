@@ -3,3 +3,4 @@
 export(npdf_cox)
 export(simulWeibDiscreteFrail)
 export(simulWeibDiscreteFrailCovNPbaseInv)
+importFrom(survival,coxph)

@@ -12,6 +12,8 @@
 #'
 #' @return This fuction returns a list of elements, whose length is equal to the initial number of populations + 4. The last four elements of the list show the best model according to loglikelihood, BIC and AIC, while the fourth term represents the minimum number of latent population for which each population has at least one member.
 #'
+#' @importFrom survival coxph
+#'
 #' @export
 #'
 #' @examples
