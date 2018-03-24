@@ -3,7 +3,11 @@ Title: Discrete frailty for Cox model
 Version: 0.0.0.9000
 Authors@R: c( person("First", "Last", email = "first.last@example.com", role = c( "aut", "cre" ) ),
               person("Second", "Last", email = "first.last@example.com", role = c( "aut") ) )
-Description: What the package does (one paragraph).
+Description: A collection of functions for fitting Cox model with a shared
+    nonparametric discrete frailty term. These functions should be applied to 
+    hierarchical (or grouped) time-to-event data. There are also functions for
+    simulating hirarchical time-to-event data with a parametric or nonparametric 
+    baseline..
 Depends: R (>= 3.3.2)
 License: GPL-3
 Encoding: UTF-8
