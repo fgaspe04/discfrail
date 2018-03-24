@@ -3,4 +3,6 @@
 export(npdf_cox)
 export(simulWeibDiscreteFrail)
 export(simulWeibDiscreteFrailCovNPbaseInv)
+importFrom(Matrix,forceSymmetric)
+importFrom(numDeriv,genD)
 importFrom(survival,coxph)
