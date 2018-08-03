@@ -2,29 +2,39 @@
 % Please edit documentation in R/sim_np.R
 \name{simulWeibDiscreteFrailCovNPbaseInv}
 \alias{simulWeibDiscreteFrailCovNPbaseInv}
-\title{Generating time-to-event data with a nonparametric baseline}
+\title{Simulation of grouped time-to-event data with nonparametric baseline hazard and shared frailty distribution}
 \usage{
 simulWeibDiscreteFrailCovNPbaseInv(N, S = NULL, beta, Lambda_0_inv, p,
   w_values)
 }
 \arguments{
-\item{N}{number of groups/clusters in data}
+\item{N}{number of groups in the data}
 
-\item{S}{number of statistical units in each group}
+\item{S}{number of individuals in each group}
 
-\item{beta}{vector of regression parameters}
+\item{beta}{vector of log hazard ratios}
 
-\item{Lambda_0_inv}{inverse cumulative baseline function}
+\item{Lambda_0_inv}{inverse cumulative baseline hazard function}
 
-\item{p}{vector of proportions related to latent populations}
+\item{p}{vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups}
 
-\item{w_values}{vector of frailty values}
+\item{w_values}{vector of K distinct frailty values, one for each latent population.}
 }
 \value{
-This fuction returns a dataset which fits a semiparametric Cox model with a multiplicative discrete frailty term.
+A data frame with one row for each simulated individual, and the following columns: 
+
+\code{family}: the group which the individual is in (integers 1, 2, ...)
+
+\code{time}: the simulated event time 
+
+\code{status}: the simulated survival status (TODO DOCUMENT HOW THIS IS GENERATED GIVEN THE CUMULATIVE HAZARD FUNCTION?) 
+
+\code{x}: matrix of covariate values
+
+\code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated.
 }
 \description{
-Generating time-to-event data with a nonparametric baseline
+This function returns a dataset generated from a semiparametric proportional hazards model with a shared nonparametric frailty term, for given cumulative baseline hazard function, hazard ratios, distribution of groups among latent populations, and frailty values for each latent population.
 }
 \examples{
 N <- 100
