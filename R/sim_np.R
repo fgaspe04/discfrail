@@ -13,16 +13,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' Generating time-to-event data with a nonparametric baseline
+#' Simulation of grouped time-to-event data with nonparametric baseline hazard and shared frailty distribution
 #'
-#' @param N number of groups/clusters in data
-#' @param S number of statistical units in each group
-#' @param beta vector of regression parameters
-#' @param Lambda_0_inv inverse cumulative baseline function
-#' @param p vector of proportions related to latent populations
-#' @param w_values vector of frailty values
+#' This function returns a dataset generated from a semiparametric proportional hazards model with a shared nonparametric frailty term, for given cumulative baseline hazard function, hazard ratios, distribution of groups among latent populations, and frailty values for each latent population. 
 #'
-#' @return This fuction returns a dataset which fits a semiparametric Cox model with a multiplicative discrete frailty term.
+#' @param N number of groups in the data
+#' @param S number of individuals in each group
+#' @param beta vector of log hazard ratios
+#' @param Lambda_0_inv inverse cumulative baseline hazard function
+#' @param p vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups
+#' @param w_values vector of K distinct frailty values, one for each latent population.
+#'
+#' @return A data frame with one row for each simulated individual, and the following columns: 
+#'
+#' \code{family}: the group which the individual is in (integers 1, 2, ...)
+#'
+#' \code{time}: the simulated event time 
+#'
+#' \code{status}: the simulated survival status (TODO DOCUMENT HOW THIS IS GENERATED GIVEN THE CUMULATIVE HAZARD FUNCTION?) 
+#'
+#' \code{x}: matrix of covariate values
+#'
+#' \code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated. 
+#'
 #'
 #' @export
 #'
