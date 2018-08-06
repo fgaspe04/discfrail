@@ -419,31 +419,32 @@ information_matrix <- function( expectedS, expectedB, expectedSexpectedS )
 }
 
 
-harzard_derivatives <- function( dat_ord, risk_index, w_off, beta_hat, cov_read, N, YY)
+hazard_derivatives <- function( X, risk_index, w_off, beta_hat, N, YY)
 {
-  ncovs <- length(cov_read)
+  ncovs <- ncol(X)
   nt <- dim(risk_index)[2]
 
   dhaz <- dcumhaz <- matrix( nrow = nt, ncol = ncovs )
   d2haz <- d2cumhaz <- array( dim = c( nt, ncovs, ncovs ) )
 
   #nt x ncovs
-  dYY <- t( risk_index) %*% ( as.matrix(sapply(w_off * exp( beta_hat %*% t(dat_ord[ ,cov_read ]) ) * dat_ord[ ,cov_read ], as.numeric)))
+  hazbase <- as.numeric(exp( beta_hat %*% t(X) ))
+  dYY <- t(risk_index) %*% (w_off * hazbase * X)
   dhaz <- - dYY * N/YY^2
 
   if( ncovs > 1 )
   {
-    #nrow(dat_ord) x ncovs x ncovs
-    d2YYtemp <- array( t( apply( dat_ord[,cov_read], 1, function(x) x%*%t(x)) ), dim=c( dim( dat_ord )[1], ncovs, ncovs ) )
+      nobs <- nrow(X)
+    d2YYtemp <- array( t( apply( X, 1, function(x) x%*%t(x)) ), dim=c( nobs, ncovs, ncovs ) )
     #nt x ncovs x ncovs
     dYYdYY <- array( t( apply( dYY[,1:ncovs], 1, function(x) x%*%t(x)) ), dim=c( nt, ncovs, ncovs ) )
-    L <- lapply( seq_len( dim(risk_index)[2] ), function(i) apply(as.vector(w_off*exp(beta_hat %*% t(dat_ord[,cov_read])))*d2YYtemp*risk_index[,i],MARGIN = 2:3,sum))
+    L <- lapply( seq_len( dim(risk_index)[2] ), function(i) apply(as.vector(w_off*exp(beta_hat %*% t(X)))*d2YYtemp*risk_index[,i],MARGIN = 2:3,sum))
     d2YY <- array( unlist(L), dim = c(nrow(L[[1]]), ncol(L[[1]]), length(L)))
     d2YY <- aperm( d2YY, c( 3, 1, 2 ))
   }else{
-    d2YYtemp <- dat_ord[,cov_read]^2
+    d2YYtemp <- X^2
     dYYdYY <- dYY^2
-    d2YY <- t(risk_index) %*% ( w_off*exp( beta_hat * dat_ord[,cov_read] )*d2YYtemp ) # nt x ncovs
+    d2YY <- t(risk_index) %*% ( w_off*exp( beta_hat * X )*d2YYtemp ) # nt x ncovs
   }
 
   # constructing array for point-wise operation
@@ -468,9 +469,9 @@ harzard_derivatives <- function( dat_ord, risk_index, w_off, beta_hat, cov_read,
 
 }
 
-input_se_functions <- function( family, time, status, dat_ord, cov_read, beta_hat, haz, cumhaz, dhaz, dcumhaz, d2haz, d2cumhaz )
+input_se_functions <- function( groups, time, status, X, beta_hat, haz, cumhaz, dhaz, dcumhaz, d2haz, d2cumhaz )
 {
-  H <- length( unique( dat_ord[[family]] ) )
+  H <- length( unique( groups ) )
   ncovs <- length( beta_hat )
 
 
@@ -484,34 +485,32 @@ input_se_functions <- function( family, time, status, dat_ord, cov_read, beta_ha
 
   for( j in 1:H )
   {
-    hospj <- dat_ord[[family]]==j
-    ebz <- exp( as.matrix( dat_ord[hospj,cov_read] ) %*% beta_hat )
-    ti <- match(dat_ord[[time]][hospj], cumhaz$time)
+    hospj <- groups==j
+    ebz <- exp( as.matrix( X[hospj,,drop=FALSE] ) %*% beta_hat )
+    ti <- match(time[hospj], cumhaz$time)
     lam0t <- cumhaz$hazard[ti]
     sumhaz[j] <- sum(lam0t * ebz)
 
 
     for (r in 1:ncovs){
-      cov_int_r = cov_read[r]
-      covr <- dat_ord[hospj,cov_int_r]
+      covr <- X[hospj,r]
       lamrt <- dcumhaz[ti, r]
       #dsumhaz is the second part of III term
       dsumhaz[j,r] <- sum(ebz*(covr*lam0t + lamrt))
       #new lines for III term
-      lamroutlam0tmp <- dat_ord[[status]][hospj]*( dhaz[ti,r]/haz[ti] + covr )
+      lamroutlam0tmp <- status[hospj]*( dhaz[ti,r]/haz[ti] + covr )
       lamroutlam0[j,r] <- sum(lamroutlam0tmp[haz[ti]>0])
 
-      deltaijcovrtmp <- dat_ord[[status]][hospj]*covr
+      deltaijcovrtmp <- status[hospj]*covr
       deltaijcovr[j,r] <- sum(deltaijcovrtmp[haz[ti]>0])
       dsumhazred[j,r] <- sum(ebz*(covr*lam0t))
 
       for (s in 1:ncovs){
-        cov_int_s <- cov_read[s]
-        covs <- dat_ord[hospj,cov_int_s]
+        covs <- X[hospj,s]
         lamst <- dcumhaz[ti, s]
         lamrst <- d2cumhaz[ti, r, s]
         d2sumhaz[j,r,s] <- sum(ebz*(covr*covs*lam0t + covr*lamst + covs*lamrt + lamrst))
-        lamtmp <- dat_ord[[status]][hospj] * (d2haz[ti,r,s]*haz[ti] - dhaz[ti,r]*dhaz[ti,s])/haz[ti]^2
+        lamtmp <- status[hospj] * (d2haz[ti,r,s]*haz[ti] - dhaz[ti,r]*dhaz[ti,s])/haz[ti]^2
         lamsum[j,r,s] <- sum(lamtmp[haz[ti]>0]) # exclude zero hazard
 
       }
@@ -531,31 +530,30 @@ input_se_functions <- function( family, time, status, dat_ord, cov_read, beta_ha
   return(lis)
 }
 
-log_likelihood <- function( family, time, status,dat_ord, cov_read, p, w, alpha, beta_hat, haz, cumhaz)
+log_likelihood <- function( groups, time, status, X, p, w, alpha, beta_hat, haz, cumhaz)
 {
   H <- dim(alpha)[1]
   K <- dim(alpha)[2]
-  ncovs <- length( beta_hat )
-  flag_cov = ifelse( length(cov_read) != 0, 1, 0 )
+  ncovs <- ncol(X)
 
   llik = 0
 
   for( j in 1:H )
   {
-    hospj <- dat_ord[[family]]==j
-    hospj_lam <- dat_ord[[family]]==j & dat_ord[[status]]==1
-    ti <- match(dat_ord[[time]][hospj], cumhaz$time)
-    ti_lam <- match(dat_ord[[time]][hospj_lam], cumhaz$time)
+    hospj <- groups==j
+    hospj_lam <- groups==j & status==1
+    ti <- match(time[hospj], cumhaz$time)
+    ti_lam <- match(time[hospj_lam], cumhaz$time)
 
     for( k in 1:K )
     {
-      llik_LAM <- ifelse( flag_cov == 1,
-                          sum( cumhaz$hazard[ti]*w[k]*exp( as.matrix( dat_ord[hospj,cov_read] ) %*% beta_hat ) ),
+      llik_LAM <- ifelse( ncovs > 0,
+                          sum( cumhaz$hazard[ti]*w[k]*exp( as.matrix( X[hospj,,drop=FALSE] ) %*% beta_hat ) ),
                           sum( cumhaz$hazard[ti]*w[k] ) )
 
       #w_off[hospj][1] because w_off[hospj] are all equal
-      llik_lam <- ifelse( flag_cov == 1,
-                          sum( log( haz[ti_lam]*w[k]*exp( as.matrix( dat_ord[hospj_lam,cov_read] ) %*% beta_hat ) ) ),
+      llik_lam <- ifelse( ncovs > 0,
+                          sum( log( haz[ti_lam]*w[k]*exp( as.matrix( X[hospj_lam,,drop=FALSE] ) %*% beta_hat ) ) ),
                           sum( log( haz[ti_lam]*w[k] ) ) )
 
       llik_p <- ifelse( K==1, 1, p[ k ] )

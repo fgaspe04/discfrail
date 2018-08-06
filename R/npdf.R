@@ -13,20 +13,34 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' Estimating a Cox model with a shared nonparametric frailty
+#' Cox model for grouped survival data with discrete shared frailties
 #'
-#' This function estimates the parameter of a semiparametric Cox model with a nonparametric frailty term.
+#' This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
 #'
-#' @param data a data.frame in which there are status, time, family and covariates variables
-#' @param time name of the variable which indicates the status
-#' @param status name of the variable which indicates the status
-#' @param family name of the variable by which the data are divided
-#' @param covariates vector of covariates' names
-#' @param population initial number of latent populations
-#' @param eps_conv tolerance
+#' @param formula A formula expression in conventional R linear modelling
+#' syntax. The response must be a survival time constructed by the
+#' \code{\link{Surv}} function from the \pkg{survival} package, and
+#' any covariates are given on the right-hand
+#' side.  For example,
+#' 
+#' \code{Surv(time, dead) ~ age + sex}
 #'
-#' @return This fuction returns a list of elements, whose length is equal to the initial number of populations + 4. The last four elements of the list show the best model according to loglikelihood, BIC and AIC, while the fourth term represents the minimum number of latent population for which each population has at least one member.
+#' Only \code{Surv} objects of \code{type="right"} are supported, corresponding to right-censored observations.
+#' 
+#' @param data A data frame in which to find variables supplied in
+#' \code{formula}.  If not given, the variables should be in the working
+#' environment.
+#' 
+#' @param groups name of the variable which indicates the group in which each individual belongs (e.g. the hospital that the individual is treated in).  This can be integer, factor or character.  The name should be unquoted. 
+#' 
+#' @param population initial number of latent populations, or clusters of groups which have the same discrete frailty.
+#' 
+#' @param eps_conv convergence tolerance for the EM algorithm
 #'
+#' @return This function returns a list of elements, whose length is equal to the initial number of populations + 4. The last four elements of the list show the best model according to loglikelihood, BIC and AIC, while the fourth term represents the minimum number of latent population for which each population has at least one member.
+#'
+#' @references Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data". 
+#' 
 #' @importFrom survival coxph
 #' @importFrom numDeriv genD
 #' @importFrom Matrix forceSymmetric
@@ -42,7 +56,7 @@
 #' w_values <- c( 0.8, 1.6 )
 #' data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 #'
-#' test_res <- npdf_cox( data, time = 'time', status = 'status', family = 'family', covariates = c('x'), population = 4, eps_conv=10^-4)
+#' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, population = 4, eps_conv=10^-4)
 #' best_model_llik <- test_res[[5]] #population+1
 #' best_model_BIC <- test_res[[6]] #population+2
 #' best_model_AIC <- test_res[[7]] #population+3
@@ -51,41 +65,61 @@
 #' test_res[[best_model_BIC]]
 
 
-
-npdf_cox <- function( data, time, status, family, covariates, population = 2, eps_conv=10^-4)
+npdf_cox <- function(formula, groups, population=2, data, eps_conv=10^-4)
 {
-  H <- length( unique( data[[family]] ) ) #total number of groups
-  K <- population #number of latent populations
-  dat_ord <- data[ order( data[[family]], data[[time]], -data[[status]] ), ]
-  nt <- length(unique(data[[time]]))
-  ncovs <- length(covariates)
-  cov_read <- paste(covariates, sep=',')
+  call <- match.call()
+  indx <- match(c("formula", "groups", "data"), names(call), nomatch = 0)
+  if (indx[1] == 0)
+    stop("A \"formula\" argument is required")
+  if (indx[2] == 0)
+    stop("A \"groups\" argument is required")
+  temp <- call[c(1, indx)]
+  temp[[1]] <- as.name("model.frame")
+  temp[["formula"]] <- formula
+  if (missing(data)) temp[["data"]] <- environment(formula)
+  mf <- eval(temp, parent.frame())
+  
+  Y <- model.extract(mf, "response")
+  time <- Y[,"time"]
+  status <- Y[,"status"]
+  groups <- model.extract(mf, "groups")
+  mf <- mf[order(groups, time, -status),,drop=FALSE] # is the ordering necessary?
+  Y <- model.extract(mf, "response")
+  time <- Y[,"time"]
+  status <- Y[,"status"]
+  groups <- model.extract(mf, "groups")
+
+  mm <- model.matrix(formula, mf)
+  X <- mm[,-1,drop=FALSE]
+
+  H <- length( unique( groups ) ) #total number of groups
+  K <- population # number of latent populations
+  nt <- length(unique(time))
+  
+  nobs <- nrow(mf)
+  ncovs <- ncol(X)
   cumhaz <- as.data.frame( cbind( hazard=rep( 0, nt ),
-                                   time = sort( unique( data[[time]] ) )) )
+                                 time = sort( unique( time ) )) )
 
   #### computing SE
   YY <- haz <- rep( 0, nt )
 
-  ##sort the cluster id (there is a smarter way)
-  for( i in 1:length(unique( dat_ord[[family]] ) ) )
-  {
-    value <- unique( dat_ord[[family]] )[i]
-    dat_ord[[family]][ dat_ord[[family]] == value ] <- i
-  }
+  ## convert the cluster id to numeric
+  groups <- match(groups, unique(groups))
 
-  D <- table( factor( dat_ord[[family]] )[ dat_ord[[status]] == 1 ] )  # number of events in each group j
-  n_H <- as.vector( table( dat_ord[[family]] ) ) #number of patients in each hospital
+  D <- table( factor( groups )[ status == 1 ] )  # number of events in each group j
+  n_H <- as.vector( table( groups ) ) #number of patients in each hospital
 
-  risk_index <- matrix( 0, nrow = dim(dat_ord)[1], ncol = nt ) # matrix of at risk patients: nrows x nt
+  risk_index <- matrix( 0, nrow = nobs, ncol = nt ) # matrix of at risk patients: nrows x nt
   N = rep( 0, nt )
 
-  time_list <- sapply( 1:nt, function(x) !is.na(match(dat_ord[[time]], cumhaz$time[x]))) #matrix dim(dat_ord)[1] x nt, time_list[i,j] = T if the i-th row in the data is the j-th time recorded
-  N <- sapply( 1:dim(time_list)[2], function(x) sum(dat_ord[[status]][time_list[,x]])) #number of events happenend at each time. N[j] is the number of eents happenend at time j
+  time_list <- sapply( 1:nt, function(x) !is.na(match(time, cumhaz$time[x]))) #matrix dim(dat_ord)[1] x nt, time_list[i,j] = T if the i-th row in the data is the j-th time recorded
+  N <- sapply( 1:dim(time_list)[2], function(x) sum(status[time_list[,x]])) #number of events happenend at each time. N[j] is the number of eents happenend at time j
 
 
   for( l in 1:nt )
   {
-    risk_index[ which( dat_ord[[time]] >= cumhaz$time[ l ]), l ] <-  1 #nrow(dat_ord) x nt
+    risk_index[ which( time >= cumhaz$time[ l ]), l ] <-  1 #nrow(dat_ord) x nt
   }
 
   lis = list()
@@ -114,7 +148,7 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
       p <- table(w_to_rep)/H
     }
 
-    w_off <- w_to_rep[ dat_ord[[family]] ]
+    w_off <- w_to_rep[ groups ]
 
     numerator <- rep( 0, K )
     E_formula_part <- rep( 0, H )
@@ -124,14 +158,14 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
     while(eps > eps_conv & count < 200 )
     {
 
-      mF <- formula( paste("Surv(time, status)", paste( paste( covariates, collapse= '+'), "offset( log( w_off ) )", sep ='+'), sep = "~"))
-      temp_model <- survival::coxph( mF, data = dat_ord,  method = "breslow" )
+      form_off <- formula( paste(deparse(formula), "offset( log( w_off ) )", sep ='+'), sep = "~")
+      temp_model <- survival::coxph( formula=form_off, data=data, method = "breslow" )
 
       # estimating the betas
       beta_hat <- temp_model$coef
 
       # computing baseline hazard and cumulative baseline hazard
-      YY = as.numeric( (w_off*exp( beta_hat %*% t(dat_ord[,cov_read]) )) %*% risk_index ) # nt x 1 contribute from at risk patient
+      YY = as.numeric( (w_off*exp( beta_hat %*% t(X) )) %*% risk_index ) # nt x 1 contribute from at risk patient
       haz = N/YY
       cumhaz$hazard = cumsum( haz )
 
@@ -143,22 +177,18 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
 
       for( j in 1:H )
       {
-        hospj <- dat_ord[[family]]==j
-        ebz <- exp( as.matrix( dat_ord[hospj,cov_read] ) %*% beta_hat )
-        ti <- match(dat_ord[[time]][hospj], cumhaz$time)
+        hospj <- groups==j
+        ebz <- exp( as.matrix( X[hospj,] ) %*% beta_hat )
+        ti <- match(time[hospj], cumhaz$time)
         lam0t <- cumhaz$hazard[ti]
 
-
-        # flag_cov is an indicator for the presence of at least 1 covariate
-        flag_cov = ifelse( length(cov_read) != 0, 1, 0 )
-
-        E_formula_part[j] <- ifelse( flag_cov == 1,
+        E_formula_part[j] <- ifelse( ncovs > 0,
                                      sum( lam0t*ebz ),
                                      sum( lam0t ) )
 
         for( k in 1:K )
         {
-          E_formula[j,k] <- ifelse( flag_cov == 1,
+          E_formula[j,k] <- ifelse( ncovs > 0,
                                     sum( lam0t*ebz*w[ k ] ),
                                     sum( lam0t*w[ k ] ) )
 
@@ -189,7 +219,7 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
       #w[which.min(w)] <- 1
 
       # vector of frailty values, dim = nx1
-      w_off <- ( w[ belonging ][dat_ord[[family]]] )
+      w_off <- ( w[ belonging ][groups] )
 
       # computation of the distance from the previous estimate of p
       eps <- max( abs(p-p_old) )
@@ -199,14 +229,14 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
     }
 
     # computing 1st and 2nd hazard derivatives
-    dhazards <- harzard_derivatives( dat_ord, risk_index, w_off, beta_hat, cov_read, N, YY )
+    dhazards <- hazard_derivatives( X, risk_index, w_off, beta_hat, N, YY )
     dhaz <- dhazards$dhaz
     d2haz <- dhazards$d2haz
     dcumhaz <- dhazards$dcumhaz
     d2cumhaz <- dhazards$d2cumhaz
 
     #computing the input for the se functions
-    input_se <- input_se_functions( family, time, status, dat_ord, cov_read, beta_hat, haz, cumhaz, dhaz, dcumhaz, d2haz, d2cumhaz )
+    input_se <- input_se_functions( groups, time, status, X, beta_hat, haz, cumhaz, dhaz, dcumhaz, d2haz, d2cumhaz )
     lamroutlam0 <- input_se$lamroutlam0
     lamsum <- input_se$lamsum
     deltaijcovr <- input_se$deltaijcovr
@@ -219,20 +249,20 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
     #function to be numerically optimized
     sefundeponwbeta = function( x )
     {
-      YYfun <- as.numeric( (w_off*exp( x[(2*K):(2*K-1+ncovs)] %*% t(dat_ord[,cov_read]) )) %*% risk_index ) # nt x 1 contribute from at risk patient
+      YYfun <- as.numeric( (w_off*exp( x[(2*K):(2*K-1+ncovs)] %*% t(X) )) %*% risk_index ) # nt x 1 contribute from at risk patient
       hazfun <- N/YYfun
       cumhazfun <- cumsum(hazfun)
 
       lfull <- rep(0,H)
       for(j in 1:H)
       {
-        hospj <- dat_ord[[family]]==j
-        ebz <- exp( as.matrix( dat_ord[hospj,cov_read] ) %*% x[(2*K):(2*K-1+ncovs)] )
-        ti <- match(dat_ord[[time]][hospj], cumhaz$time)
+        hospj <- groups==j
+        ebz <- exp( as.matrix( X[hospj,] ) %*% x[(2*K):(2*K-1+ncovs)] )
+        ti <- match(time[hospj], cumhaz$time)
         lam0t <- cumhazfun[ti]
         haz0t <- hazfun[ti]
 
-        firsttermtmp <- dat_ord[[status]][hospj]*log(haz0t*ebz)
+        firsttermtmp <- status[hospj]*log(haz0t*ebz)
         firstterm <- sum(firsttermtmp[haz0t>0,])
 
         secondtermtmp <- -sum(lam0t * ebz) * x[(K):(2*K-1)]
@@ -271,10 +301,10 @@ npdf_cox <- function( data, time, status, family, covariates, population = 2, ep
 
 
     # computing loglikelihood, AIC and BIC
-    llik <- log_likelihood( family, time, status, dat_ord, cov_read, p, w, alpha, beta_hat, haz, cumhaz)
+    llik <- log_likelihood( groups, time, status, X, p, w, alpha, beta_hat, haz, cumhaz)
 
-    tot_param <- K-1 + K + length(cov_read)
-    BIC <- -2*llik + tot_param * log( length( which(dat_ord$status == 1 ) ) )
+    tot_param <- K-1 + K + ncovs
+    BIC <- -2*llik + tot_param * log( length( which(status == 1 ) ) )
     AIC <- -2*llik + 2*tot_param
 
 

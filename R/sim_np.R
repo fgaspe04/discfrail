@@ -30,7 +30,7 @@
 #'
 #' \code{time}: the simulated event time 
 #'
-#' \code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed if it is less than the censoring time, and censored otherwise.
+#' \code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
 #'
 #' \code{x}: matrix of covariate values, generated from a standard normal distribution.
 #'
