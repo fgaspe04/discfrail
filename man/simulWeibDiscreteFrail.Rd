@@ -2,30 +2,43 @@
 % Please edit documentation in R/sim_weib.R
 \name{simulWeibDiscreteFrail}
 \alias{simulWeibDiscreteFrail}
-\title{Generating time-to-event data with a Weibull baseline}
+\title{Simulation of grouped time-to-event data with Weibull baseline hazard and discrete shared frailty distribution}
 \usage{
 simulWeibDiscreteFrail(N, S = NULL, lambda, rho, beta, p, w_values)
 }
 \arguments{
-\item{N}{number of groups/clusters in data}
+\item{N}{number of groups in the data}
 
-\item{S}{number of statistical units in each group}
+\item{S}{number of individuals in each group}
 
-\item{lambda}{value of lambda in a Weibull distribution}
+\item{lambda}{Weibull baseline rate parameter (see below), interpreted as the rate parameter with covariate values of 0 and frailty ratio 1.  For \eqn{rho=1} this is the baseline hazard.}
 
-\item{rho}{value of rho in a Weibull distribution}
+\item{rho}{Weibull shape parameter (see below)}
 
-\item{beta}{vector of regression parameters}
+\item{beta}{covariate effects in the Weibull distribution, interpreted as log hazard ratios (see below)}
 
-\item{p}{vector of proportions related to latent populations}
+\item{p}{vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups.}
 
-\item{w_values}{vector of frailty values}
+\item{w_values}{vector of K distinct frailty values, one for each latent population.}
 }
 \value{
-This fuction returns a dataset which fits a parametric Cox model with a Weibull distributed baseline and a multiplicative discrete frailty term
+A data frame with one row for each simulated individual, and the following columns: 
+
+\code{family}: the group which the individual is in (integers 1, 2, ...)
+
+\code{time}: the simulated event time 
+
+\code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed if it is less than the censoring time, and censored otherwise.
+
+\code{x}: matrix of covariate values, generated from a standard normal distribution.
+
+\code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated.
 }
 \description{
-Generating time-to-event data with a Weibull baseline
+This function returns a dataset generated from a Weibull proportional hazards model with a shared discrete frailty term, for given Weibull parameters, hazard ratios, distribution of groups among latent populations, frailty values for each latent population, and randomly-generated covariate values.
+}
+\details{
+The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
 }
 \examples{
 N <- 100

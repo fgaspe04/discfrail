@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim_np.R
 \name{simulWeibDiscreteFrailCovNPbaseInv}
 \alias{simulWeibDiscreteFrailCovNPbaseInv}
-\title{Simulation of grouped time-to-event data with nonparametric baseline hazard and shared frailty distribution}
+\title{Simulation of grouped time-to-event data with nonparametric baseline hazard and discrete shared frailty distribution}
 \usage{
 simulWeibDiscreteFrailCovNPbaseInv(N, S = NULL, beta, Lambda_0_inv, p,
   w_values)
@@ -14,9 +14,9 @@ simulWeibDiscreteFrailCovNPbaseInv(N, S = NULL, beta, Lambda_0_inv, p,
 
 \item{beta}{vector of log hazard ratios}
 
-\item{Lambda_0_inv}{inverse cumulative baseline hazard function}
+\item{Lambda_0_inv}{inverse cumulative baseline hazard function, that is, with covariate values 0 and frailty ratio 1}
 
-\item{p}{vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups}
+\item{p}{vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups.}
 
 \item{w_values}{vector of K distinct frailty values, one for each latent population.}
 }
@@ -27,14 +27,14 @@ A data frame with one row for each simulated individual, and the following colum
 
 \code{time}: the simulated event time 
 
-\code{status}: the simulated survival status (TODO DOCUMENT HOW THIS IS GENERATED GIVEN THE CUMULATIVE HAZARD FUNCTION?) 
+\code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed if it is less than the censoring time, and censored otherwise.
 
-\code{x}: matrix of covariate values
+\code{x}: matrix of covariate values, generated from a standard normal distribution.
 
 \code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated.
 }
 \description{
-This function returns a dataset generated from a semiparametric proportional hazards model with a shared nonparametric frailty term, for given cumulative baseline hazard function, hazard ratios, distribution of groups among latent populations, and frailty values for each latent population.
+This function returns a dataset generated from a semiparametric proportional hazards model with a shared discrete frailty term, for given cumulative baseline hazard function, hazard ratios, distribution of groups among latent populations, frailty values for each latent population, and randomly-generated covariate values.
 }
 \examples{
 N <- 100
