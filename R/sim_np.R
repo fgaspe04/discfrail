@@ -13,15 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' Simulation of grouped time-to-event data with nonparametric baseline hazard and shared frailty distribution
+#' Simulation of grouped time-to-event data with nonparametric baseline hazard and discrete shared frailty distribution
 #'
-#' This function returns a dataset generated from a semiparametric proportional hazards model with a shared nonparametric frailty term, for given cumulative baseline hazard function, hazard ratios, distribution of groups among latent populations, and frailty values for each latent population. 
+#' This function returns a dataset generated from a semiparametric proportional hazards model with a shared discrete frailty term, for given cumulative baseline hazard function, hazard ratios, distribution of groups among latent populations, frailty values for each latent population, and randomly-generated covariate values.
 #'
 #' @param N number of groups in the data
 #' @param S number of individuals in each group
 #' @param beta vector of log hazard ratios
-#' @param Lambda_0_inv inverse cumulative baseline hazard function
-#' @param p vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups
+#' @param Lambda_0_inv inverse cumulative baseline hazard function, that is, with covariate values 0 and frailty ratio 1
+#' @param p vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups.
 #' @param w_values vector of K distinct frailty values, one for each latent population.
 #'
 #' @return A data frame with one row for each simulated individual, and the following columns: 
@@ -30,9 +30,9 @@
 #'
 #' \code{time}: the simulated event time 
 #'
-#' \code{status}: the simulated survival status (TODO DOCUMENT HOW THIS IS GENERATED GIVEN THE CUMULATIVE HAZARD FUNCTION?) 
+#' \code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
 #'
-#' \code{x}: matrix of covariate values
+#' \code{x}: matrix of covariate values, generated from a standard normal distribution.
 #'
 #' \code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated. 
 #'

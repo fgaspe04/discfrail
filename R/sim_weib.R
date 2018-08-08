@@ -13,18 +13,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' Generating time-to-event data with a Weibull baseline
+#' Simulation of grouped time-to-event data with Weibull baseline hazard and discrete shared frailty distribution
 #'
-#' @param N number of groups/clusters in data
-#' @param S number of statistical units in each group
-#' @param lambda value of lambda in a Weibull distribution
-#' @param rho value of rho in a Weibull distribution
-#' @param beta vector of regression parameters
-#' @param p vector of proportions related to latent populations
-#' @param w_values vector of frailty values
+#' This function returns a dataset generated from a Weibull proportional hazards model with a shared discrete frailty term, for given Weibull parameters, hazard ratios, distribution of groups among latent populations, frailty values for each latent population, and randomly-generated covariate values.
 #'
-#' @return This fuction returns a dataset which fits a parametric Cox model with a Weibull distributed baseline and a multiplicative discrete frailty term
+#' @inheritParams simulWeibDiscreteFrailCovNPbaseInv
 #'
+#' @param lambda Weibull baseline rate parameter (see below), interpreted as the rate parameter with covariate values of 0 and frailty ratio 1.  For \eqn{rho=1} this is the baseline hazard.
+#' 
+#' @param rho Weibull shape parameter (see below)
+#'
+#' @param beta covariate effects in the Weibull distribution, interpreted as log hazard ratios (see below)
+#' 
+#' @inherit simulWeibDiscreteFrailCovNPbaseInv return
+#'
+#' @details The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
+#' 
 #' @export
 #'
 #' @examples
