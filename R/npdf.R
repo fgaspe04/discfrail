@@ -41,7 +41,6 @@
 #'
 #' @references Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data". 
 #' 
-#' @importFrom survival coxph
 #' @importFrom numDeriv genD
 #' @importFrom Matrix forceSymmetric
 #'
@@ -159,7 +158,7 @@ npdf_cox <- function(formula, groups, population=2, data, eps_conv=10^-4)
     {
 
       form_off <- formula( paste(deparse(formula), "offset( log( w_off ) )", sep ='+'), sep = "~")
-      temp_model <- survival::coxph( formula=form_off, data=data, method = "breslow" )
+      temp_model <- coxph( formula=form_off, data=data, method = "breslow" )
 
       # estimating the betas
       beta_hat <- temp_model$coef

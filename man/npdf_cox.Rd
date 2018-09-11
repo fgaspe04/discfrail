@@ -2,31 +2,36 @@
 % Please edit documentation in R/npdf.R
 \name{npdf_cox}
 \alias{npdf_cox}
-\title{Estimating a Cox model with a shared nonparametric frailty}
+\title{Cox model for grouped survival data with discrete shared frailties}
 \usage{
-npdf_cox(data, time, status, family, covariates, population = 2,
-  eps_conv = 10^-4)
+npdf_cox(formula, groups, population = 2, data, eps_conv = 10^-4)
 }
 \arguments{
-\item{data}{a data.frame in which there are status, time, family and covariates variables}
+\item{formula}{A formula expression in conventional R linear modelling
+syntax. The response must be a survival time constructed by the
+\code{\link{Surv}} function from the \pkg{survival} package, and
+any covariates are given on the right-hand
+side.  For example,
 
-\item{time}{name of the variable which indicates the status}
+\code{Surv(time, dead) ~ age + sex}
 
-\item{status}{name of the variable which indicates the status}
+Only \code{Surv} objects of \code{type="right"} are supported, corresponding to right-censored observations.}
 
-\item{family}{name of the variable by which the data are divided}
+\item{groups}{name of the variable which indicates the group in which each individual belongs (e.g. the hospital that the individual is treated in).  This can be integer, factor or character.  The name should be unquoted.}
 
-\item{covariates}{vector of covariates' names}
+\item{population}{initial number of latent populations, or clusters of groups which have the same discrete frailty.}
 
-\item{population}{initial number of latent populations}
+\item{data}{A data frame in which to find variables supplied in
+\code{formula}.  If not given, the variables should be in the working
+environment.}
 
-\item{eps_conv}{tolerance}
+\item{eps_conv}{convergence tolerance for the EM algorithm}
 }
 \value{
-This fuction returns a list of elements, whose length is equal to the initial number of populations + 4. The last four elements of the list show the best model according to loglikelihood, BIC and AIC, while the fourth term represents the minimum number of latent population for which each population has at least one member.
+This function returns a list of elements, whose length is equal to the initial number of populations + 4. The last four elements of the list show the best model according to loglikelihood, BIC and AIC, while the fourth term represents the minimum number of latent population for which each population has at least one member.
 }
 \description{
-This function estimates the parameter of a semiparametric Cox model with a nonparametric frailty term.
+This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
 }
 \examples{
 N <- 100
@@ -37,11 +42,14 @@ p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
 data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 
-test_res <- npdf_cox( data, time = 'time', status = 'status', family = 'family', covariates = c('x'), population = 4, eps_conv=10^-4)
+test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, population = 4, eps_conv=10^-4)
 best_model_llik <- test_res[[5]] #population+1
 best_model_BIC <- test_res[[6]] #population+2
 best_model_AIC <- test_res[[7]] #population+3
 best_model_K <- test_res[[8]] #population+4
 
 test_res[[best_model_BIC]]
+}
+\references{
+Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
 }
