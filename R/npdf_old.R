@@ -27,34 +27,17 @@
 #'
 #' Only \code{Surv} objects of \code{type="right"} are supported, corresponding to right-censored observations.
 #' 
-#' @param groups name of the variable which indicates the group in which each individual belongs (e.g. the hospital that the individual is treated in).  This can be integer, factor or character.  The name should be unquoted. 
-#' 
 #' @param data A data frame in which to find variables supplied in
 #' \code{formula}.  If not given, the variables should be in the working
 #' environment.
 #' 
-#' @param K initial number of latent populations, or clusters of groups which have the same discrete frailty.
-#'
-#' @param estK If \code{TRUE} (the default) then multiple models are fitted with number of latent groups ranging from 1 to \code{K}.  The "best fitting" model according to the criterion specified in \code{criterion} is then highlighted when printing the object returned by this function.
-#'
-#' If \code{FALSE} then the number of latent populations is fixed at \code{K}.  
-#'
-#' @param criterion Criterion used to choose the best-fitting model to highlight when \code{estK} is \code{TRUE}.
-#'
-#' \code{"Laird"} for the Laird criterion (the default.  TODO REF EXPLAIN)
-#'
-#' \code{"AIC"} for Akaike's information criterion (TODO REF) 
-#'
-#' \code{"BIC"} for the Bayesian information criterion (TODO REF) 
+#' @param groups name of the variable which indicates the group in which each individual belongs (e.g. the hospital that the individual is treated in).  This can be integer, factor or character.  The name should be unquoted. 
+#' 
+#' @param population initial number of latent populations, or clusters of groups which have the same discrete frailty.
 #' 
 #' @param eps_conv convergence tolerance for the EM algorithm
 #'
-#' @return If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors. 
-#'
-#' If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.   Components \code{comparison}, \code{Kopt} and \code{criterion} contain the model comparison statistics, optimal model under each criterion, and the preferred criterion, respectively.
-#'
-#' In either case the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
-#'
+#' @return This function returns a list of elements, whose length is equal to the initial number of populations + 4. The last four elements of the list show the best model according to loglikelihood, BIC and AIC, while the fourth term represents the minimum number of latent population for which each population has at least one member.
 #'
 #' @references Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data". 
 #' 
@@ -70,16 +53,19 @@
 #' beta <- 1.6
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' set.seed(1)
 #' data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 #'
-#' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, K = 4, eps_conv=10^-4)
-#' test_res    # optimal model (by all criteria) has 2 latent populations
-#' test_res$models[[1]] # examine alternative model with 1 latent population 
-#' 
-npdf_cox <- function(formula, groups, data,
-                     K=2, estK=TRUE, criterion="Laird",
-                     eps_conv=10^-4){
+#' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, population = 4, eps_conv=10^-4)
+#' best_model_llik <- test_res[[5]] #population+1
+#' best_model_BIC <- test_res[[6]] #population+2
+#' best_model_AIC <- test_res[[7]] #population+3
+#' best_model_K <- test_res[[8]] #population+4
+#'
+#' test_res[[best_model_BIC]]
+
+
+npdf_cox_old <- function(formula, groups, population=2, data, eps_conv=10^-4)
+{
   call <- match.call()
   indx <- match(c("formula", "groups", "data"), names(call), nomatch = 0)
   if (indx[1] == 0)
@@ -106,6 +92,7 @@ npdf_cox <- function(formula, groups, data,
   X <- mm[,-1,drop=FALSE]
 
   H <- length( unique( groups ) ) #total number of groups
+  K <- population # number of latent populations
   nt <- length(unique(time))
   
   nobs <- nrow(mf)
@@ -120,66 +107,24 @@ npdf_cox <- function(formula, groups, data,
   groups <- match(groups, unique(groups))
 
   D <- table( factor( groups )[ status == 1 ] )  # number of events in each group j
-  risk_index <- matrix( 0, nrow = nobs, ncol = nt ) # matrix of at risk patients: nrows x nt
+  n_H <- as.vector( table( groups ) ) #number of patients in each hospital
 
-  time_list <- sapply( 1:nt, function(x) !is.na(match(time, cumhaz$time[x]))) # matrix dim(dat_ord)[1] x nt, time_list[i,j] = T if the i-th row in the data is the j-th time recorded
-  N <- sapply( 1:dim(time_list)[2], function(x) sum(status[time_list[,x]])) # N[j] is the number of events which happenened at time j
+  risk_index <- matrix( 0, nrow = nobs, ncol = nt ) # matrix of at risk patients: nrows x nt
+  N = rep( 0, nt )
+
+  time_list <- sapply( 1:nt, function(x) !is.na(match(time, cumhaz$time[x]))) #matrix dim(dat_ord)[1] x nt, time_list[i,j] = T if the i-th row in the data is the j-th time recorded
+  N <- sapply( 1:dim(time_list)[2], function(x) sum(status[time_list[,x]])) #number of events happenend at each time. N[j] is the number of eents happenend at time j
+
 
   for( l in 1:nt )
   {
     risk_index[ which( time >= cumhaz$time[ l ]), l ] <-  1 #nrow(dat_ord) x nt
   }
 
-  if (estK) {
-      models <- vector(K, mode="list")
-      k <- K
-      while( k >= 1 ) {
-          models[[k]] <- npdf_core(formula=formula, data=data, K=k,
-                                   time=time, status=status, groups=groups,
-                                   X=X, ncovs=ncovs, N=N, H=H, cumhaz=cumhaz,
-                                   D=D, risk_index = risk_index, eps_conv=eps_conv)
-          k <- k-1
-      }
-      ## TODO disagree should truncate AIC selection above at Laird best fit K 
+  lis = list()
 
-      ## Matrix of fit statistics for each model 
-      comparison <- t(sapply(resall$models, 
-                           function(x) unlist(x[c("K_fitted","llik","AIC", "BIC")])
-                           ))
-      comparison <- as.data.frame(cbind(K=1:K, comparison))
-      Kopt <- c("Laird" = max(which(comparison$K == comparison$K_fitted)),
-                "AIC" = which.min(comparison$AIC), 
-                "BIC" = which.min(comparison$BIC))
-      res <- list(models=models, comparison=comparison, Kopt=Kopt, criterion=criterion)
-      class(res) <- "npdflist"
-  }  else  { 
-      res <- npdf_core(formula=formula, data=data, K=K,
-                                   time=time, status=status, groups=groups,
-                                   X=X, ncovs=ncovs, N=N, H=H, cumhaz=cumhaz,
-                                   D=D, risk_index = risk_index, eps_conv=eps_conv)
-  }
-  res$call <- call
-  res$mf <- mf
-  res
-}
-
-
-npdf_core <- function(formula,
-                      data=NULL,
-                      K=2,
-                      time,
-                      status,
-                      groups,
-                      X,
-                      ncovs,
-                      N,
-                      H,
-                      cumhaz,
-                      D,
-                      risk_index,
-                      eps_conv=10^-4
-                      ){
-    
+  while( K >= 1 )
+  {
     count <- 0
     not_proper_K <- 0
     eps <- 10^5
@@ -207,7 +152,8 @@ npdf_core <- function(formula,
     numerator <- rep( 0, K )
     E_formula_part <- rep( 0, H )
     alpha <- E_formula <- matrix( 0, nrow = H, ncol = K)
-    
+
+
     while(eps > eps_conv & count < 200 )
     {
 
@@ -281,7 +227,6 @@ npdf_core <- function(formula,
       count <- count + 1
     }
 
-
     # computing 1st and 2nd hazard derivatives
     dhazards <- hazard_derivatives( X, risk_index, w_off, beta_hat, N, YY )
     dhaz <- dhazards$dhaz
@@ -329,8 +274,7 @@ npdf_core <- function(formula,
     }
 
     #Numerical computation of standard errors
-    K_fitted <- length(unique(belonging))
-    if( K_fitted == K )
+    if( length( unique( belonging ) ) == K )
     {
       if( K != 1 )
       {
@@ -354,6 +298,7 @@ npdf_core <- function(formula,
       InfoFischer <- solve( -SecDer )
     }
 
+
     # computing loglikelihood, AIC and BIC
     llik <- log_likelihood( groups, time, status, X, p, w, alpha, beta_hat, haz, cumhaz)
 
@@ -362,34 +307,80 @@ npdf_core <- function(formula,
     AIC <- -2*llik + 2*tot_param
 
 
-    if( K_fitted < K )
+    if( length( unique( belonging ) ) < K )
     {
       not_proper_K <- 1
       stderr_covariance <- NULL
       infoRich <- NULL
       InfoFischer <- NULL
     }
-    names(p) <- paste0("p",1:K)
-    names(w) <- paste0("w",1:K)
 
-    res <- list(
-        K = K,
-        too_much_K = not_proper_K,
-        K_fitted = K_fitted,
-        p = p,
-        w = w,
-        beta = beta_hat,
-        belonging = belonging,
-        llik = llik,
-        BIC = BIC,
-        AIC = AIC,
-        varcovLouis = stderr_covariance[[1]],
-        seLouis = stderr_covariance[[2]],
-        varcovRich = infoRich,
-        seRich = sqrt(diag(infoRich)),
-        varcovExact = InfoFischer,
-        seExact = sqrt(diag(InfoFischer))
-    )
-    class(res) <- "npdf"
-    res
+    step = K
+
+    lis[[step]] <- list()
+    lis[[step]][['K']] <- K
+    lis[[step]][['too_much_K']] <- not_proper_K
+    lis[[step]][['p']] <- p
+    lis[[step]][['w']] <- w
+    lis[[step]][['beta']] <- beta_hat
+    lis[[step]][['belonging']] <- belonging
+    lis[[step]][['llik']] <- llik
+    lis[[step]][['BIC']] <- BIC
+    lis[[step]][['AIC']] <- AIC
+    lis[[step]][['varcovLouis']] <- stderr_covariance[[1]]
+    lis[[step]][['seLouis']] <- stderr_covariance[[2]]
+    lis[[step]][['varcovRich']] <- infoRich
+    lis[[step]][['seRich']] <- sqrt(diag(infoRich))
+    lis[[step]][['varcovExact']] <- InfoFischer
+    lis[[step]][['seExact']] <- sqrt(diag(InfoFischer))
+
+
+    K = K-1
+  }
+
+  best_llik = lis[[1]]$llik
+  best_BIC = lis[[1]]$BIC
+  best_AIC = lis[[1]]$AIC
+  pos_llik = 1
+  pos_BIC = 1
+  pos_AIC = 1
+  max_K = 0
+  right_K = 1
+
+  #Finding the maximum K for which we have distinct w
+  for( i in 2:population)
+  {
+    if( lis[[i]]$too_much_K > max_K )
+    {
+      max_K = lis[[i]]$too_much_K
+      right_K = lis[[i-1]]$K
+    }
+  }
+
+  if(max_K==0)
+  {
+    right_K = lis[[population]]$K
+  }
+  #Using the right K as the top value for evaluating the lowest BIC and AIC
+  i=1
+  while( i <= right_K)
+  {
+    if( lis[[i]]$llik > best_llik)
+    {
+      best_llik = lis[[i]]$llik
+      pos_llik = lis[[i]]$K
+    }
+    if( lis[[i]]$BIC < best_BIC)
+    {
+      best_BIC = lis[[i]]$BIC
+      pos_BIC = lis[[i]]$K
+    }
+    if( lis[[i]]$AIC < best_AIC)
+    {
+      best_AIC = lis[[i]]$AIC
+      pos_AIC = lis[[i]]$K
+    }
+    i=i+1
+  }
+  return( c(lis,pos_llik,pos_BIC,pos_AIC, right_K) ) #pos is the right K up to BIC or AIC, while right_K is the right K up to the belonging
 }
