@@ -83,7 +83,7 @@
 #' set.seed(1)
 #' data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 #'
-#' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, K = 4, eps_conv=10^-4)
+#' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
 #' test_res    # optimal model (by all criteria) has 2 latent populations
 #' test_res$models[[1]] # examine alternative model with 1 latent population 
 #' 
