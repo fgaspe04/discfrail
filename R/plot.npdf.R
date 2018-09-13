@@ -4,17 +4,21 @@
 ##'
 ##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{pdf_cox(...,estK=FALSE)}}
 ##'
+##' @param survfit_opts List of arguments to pass to \code{\link{survfit.formula}}
+##'
 ##' @param ... Arguments to pass to \code{\link{plot.survfit}}
 ##'
 ##' @examples TODO
 ##' 
-plot.npdf <- function(x, ...){
+plot.npdf <- function(x, survfit_opts = NULL, ...){
     with(x,{
         Y <- model.extract(mf, "response")
         Y <- as.data.frame(unclass(Y))
         groups <- model.extract(mf, "groups")
         Y$pop <- rep(belonging, table(groups))
-        surv <- survfit(Surv(time, status) ~ pop, data=Y)
+        survfit.call <- list(formula = Surv(time, status) ~ pop,
+                             data = Y)
+        surv <- do.call("survfit", c(survfit.call, survfit_opts))
         plot(surv, ...)
     })
     invisible()
