@@ -17,8 +17,9 @@ print.npdf <- function(x, digits = NULL, ...){
         est <- c(beta, p, w[-1])
         cat("Estimated parameters and standard errors:\n")
         res <- data.frame(est=est)
-        if (!is.null(seLouis))
-            res <- cbind(res, seLouis, seRich, seExact)
+        if (!is.null(x$seLouis)) res$seLouis <- seLouis 
+        if (!is.null(x$seExact)) res$seExact <- seExact
+        if (!is.null(x$seNumeric)) res$seNumeric <- seNumeric 
         fitstr <- sprintf("Log-likelihood %s, AIC %s, BIC %s", llik, BIC, AIC)
         print(res, digits=digits)
         cat("\n")

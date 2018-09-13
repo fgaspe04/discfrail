@@ -49,6 +49,16 @@
 #' 
 #' @param eps_conv convergence tolerance for the EM algorithm
 #'
+#' @param se_method Method or methods used to compute the standard errors.  A character vector containing one or more of the following:
+#'
+#' \code{"louis"} The method of Louis (1982) based on an approximation to the information matrix.
+#' 
+#' \code{"exact"} In this method the standard errors are computed directly from the observed information matrix obtained by analytic differentiation.
+#' 
+#' \code{"numeric"} This method uses numerical differentiation to approximate the information matrix, and is substantially slower.
+#' 
+#' By default this is \code{c("louis","exact")}, so that SEs from both these two methods are calculated and presented.   Set \code{se_method=NULL} to compute no standard errors.
+#'
 #' @return If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors. 
 #'
 #' If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.   Components \code{comparison}, \code{Kopt} and \code{criterion} contain the model comparison statistics, optimal model under each criterion, and the preferred criterion, respectively.
@@ -79,7 +89,7 @@
 #' 
 npdf_cox <- function(formula, groups, data,
                      K=2, estK=TRUE, criterion="Laird",
-                     eps_conv=10^-4){
+                     eps_conv=10^-4, se_method=c("louis","exact")){
   call <- match.call()
   indx <- match(c("formula", "groups", "data"), names(call), nomatch = 0)
   if (indx[1] == 0)
@@ -137,13 +147,14 @@ npdf_cox <- function(formula, groups, data,
           models[[k]] <- npdf_core(formula=formula, data=data, K=k,
                                    time=time, status=status, groups=groups,
                                    X=X, ncovs=ncovs, N=N, H=H, cumhaz=cumhaz,
-                                   D=D, risk_index = risk_index, eps_conv=eps_conv)
+                                   D=D, risk_index = risk_index, eps_conv=eps_conv,
+                                   se_method = se_method)
           k <- k-1
       }
       ## TODO disagree should truncate AIC selection above at Laird best fit K 
 
       ## Matrix of fit statistics for each model 
-      comparison <- t(sapply(resall$models, 
+      comparison <- t(sapply(models, 
                            function(x) unlist(x[c("K_fitted","llik","AIC", "BIC")])
                            ))
       comparison <- as.data.frame(cbind(K=1:K, comparison))
@@ -154,9 +165,10 @@ npdf_cox <- function(formula, groups, data,
       class(res) <- "npdflist"
   }  else  { 
       res <- npdf_core(formula=formula, data=data, K=K,
-                                   time=time, status=status, groups=groups,
-                                   X=X, ncovs=ncovs, N=N, H=H, cumhaz=cumhaz,
-                                   D=D, risk_index = risk_index, eps_conv=eps_conv)
+                       time=time, status=status, groups=groups,
+                       X=X, ncovs=ncovs, N=N, H=H, cumhaz=cumhaz,
+                       D=D, risk_index = risk_index, eps_conv=eps_conv,
+                       se_method = se_method)
   }
   res$call <- call
   res$mf <- mf
@@ -177,7 +189,8 @@ npdf_core <- function(formula,
                       cumhaz,
                       D,
                       risk_index,
-                      eps_conv=10^-4
+                      eps_conv=10^-4,
+                      se_method
                       ){
     
     count <- 0
@@ -328,32 +341,6 @@ npdf_core <- function(formula,
       return( sum( lfull ) )
     }
 
-    #Numerical computation of standard errors
-    K_fitted <- length(unique(belonging))
-    if( K_fitted == K )
-    {
-      if( K != 1 )
-      {
-        deriv <- numDeriv::genD( sefundeponwbeta, c( p[1:(K-1)], w, beta_hat ), method = "Richardson" )
-      }else{
-        deriv <- numDeriv::genD( sefundeponwbeta, c( w, beta_hat), method = "Richardson" )
-      }
-      info <- matrix(0, 2*K-1+ncovs, 2*K-1+ncovs)
-      info[upper.tri(info, diag=T)] <- deriv$D[(2*K+ncovs):(2*K-1+ncovs+(2*K+ncovs-1)*(2*K+ncovs)/2)]
-      info <- Matrix::forceSymmetric(info)
-      infoRich <- solve(-info)
-
-      #Louis method for standard errors
-      EStS <- Ixy( ncovs, alpha, w, p, D, sumhaz, lamroutlam0, dsumhaz)
-      EB <- Ix( ncovs, alpha, w, p, D, d2sumhaz, lamsum, dsumhaz)
-      ESES <- Iy( ncovs, alpha, w, p, D, sumhaz, lamroutlam0, dsumhaz)
-      stderr_covariance <- information_matrix( expectedS = EStS, expectedB = EB, expectedSexpectedS = ESES )
-
-      #Exact second derivativefor standard errors
-      SecDer <- exact_sec_der( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz,lamsum )
-      InfoFischer <- solve( -SecDer )
-    }
-
     # computing loglikelihood, AIC and BIC
     llik <- log_likelihood( groups, time, status, X, p, w, alpha, beta_hat, haz, cumhaz)
 
@@ -361,7 +348,7 @@ npdf_core <- function(formula,
     BIC <- -2*llik + tot_param * log( length( which(status == 1 ) ) )
     AIC <- -2*llik + 2*tot_param
 
-
+    K_fitted <- length(unique(belonging))
     if( K_fitted < K )
     {
       not_proper_K <- 1
@@ -382,14 +369,46 @@ npdf_core <- function(formula,
         belonging = belonging,
         llik = llik,
         BIC = BIC,
-        AIC = AIC,
-        varcovLouis = stderr_covariance[[1]],
-        seLouis = stderr_covariance[[2]],
-        varcovRich = infoRich,
-        seRich = sqrt(diag(infoRich)),
-        varcovExact = InfoFischer,
-        seExact = sqrt(diag(InfoFischer))
+        AIC = AIC
     )
+    
+    if( K_fitted == K )
+    {
+        if ("numeric" %in% se_method){ 
+            ##Numerical computation of standard errors
+            if( K != 1 )
+            {
+                deriv <- numDeriv::genD( sefundeponwbeta, c( p[1:(K-1)], w, beta_hat ), method = "Richardson" )
+            }else{
+                deriv <- numDeriv::genD( sefundeponwbeta, c( w, beta_hat), method = "Richardson" )
+            }
+            info <- matrix(0, 2*K-1+ncovs, 2*K-1+ncovs)
+            info[upper.tri(info, diag=T)] <- deriv$D[(2*K+ncovs):(2*K-1+ncovs+(2*K+ncovs-1)*(2*K+ncovs)/2)]
+            info <- Matrix::forceSymmetric(info)
+            infoNumeric <- solve(-info)
+            res$varcovNumeric = infoNumeric
+            res$seNumeric = sqrt(diag(infoNumeric))
+        }
+
+        if ("louis" %in% se_method){
+            ##Louis method for standard errors
+            EStS <- Ixy( ncovs, alpha, w, p, D, sumhaz, lamroutlam0, dsumhaz)
+            EB <- Ix( ncovs, alpha, w, p, D, d2sumhaz, lamsum, dsumhaz)
+            ESES <- Iy( ncovs, alpha, w, p, D, sumhaz, lamroutlam0, dsumhaz)
+            stderr_covariance <- information_matrix( expectedS = EStS, expectedB = EB, expectedSexpectedS = ESES )
+            res$varcovLouis = stderr_covariance[[1]]
+            res$seLouis = stderr_covariance[[2]]
+        }
+        if ("exact" %in% se_method){
+            ##Exact second derivativefor standard errors
+            SecDer <- exact_sec_der( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz,lamsum )
+            InfoFisher <- solve( -SecDer )
+            res$varcovExact = InfoFisher
+            res$seExact = sqrt(diag(InfoFisher))
+        }
+    }
+
+    
     class(res) <- "npdf"
     res
 }
