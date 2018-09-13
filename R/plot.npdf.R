@@ -4,7 +4,7 @@
 ##'
 ##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{pdf_cox(...,estK=FALSE)}}
 ##'
-##' @param survfit_opts List of arguments to pass to \code{\link{plot.survfit}}
+##' @param survfit_opts List of arguments to pass to \code{\link{survfit.formula}}
 ##'
 ##' @param ... Arguments to pass to \code{\link{plot.survfit}}
 ##'
