@@ -51,7 +51,7 @@ simulWeibDiscreteFrail <- function( N, S = NULL, lambda, rho, beta, p, w_values 
   }
 
   # n is the total sample size
-  n <- ifelse( length( S ) > 1, sum( S ), S )
+  n <- ifelse( length( S ) > 1, sum( S ), S*N )
 
   # covariate is sample from a normal
   x <- matrix( 0, nrow = n, ncol = length( beta ) )

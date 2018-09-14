@@ -2,9 +2,11 @@
 ##'
 ##' This function plots Kaplan-Meier estimates of the survival for each fitted latent population. 
 ##'
-##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{pdf_cox(...,estK=FALSE)}}
+##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{npdf_cox}} with \code{estK=FALSE}
 ##'
 ##' @param digits Number of significant digits to present, by default \code{max(1, getOption("digits") - 4)}
+##'
+##' @param ... Further options (currently unused)
 ##'
 print.npdf <- function(x, digits = NULL, ...){
     if (is.null(digits))
@@ -32,9 +34,11 @@ print.npdf <- function(x, digits = NULL, ...){
 
 ##' Print output from a nonparametric discrete frailty modelling procedure with automatic model selection. 
 ##'
-##' @param x An object returned by \code{\link{npdf_cox(...,estK=TRUE)}}, containing a list of fitted nonparametric discrete frailty models
+##' @param x An object returned by \code{\link{npdf_cox}} with \code{estK=TRUE}, containing a list of fitted nonparametric discrete frailty models
 ##'
 ##' @param digits Number of significant digits to present, by default \code{max(1, getOption("digits") - 4)}
+##'
+##' @param ... Further options (currently unused)
 ##'
 print.npdflist <- function(x, digits=NULL, ...){
     if (is.null(digits))
