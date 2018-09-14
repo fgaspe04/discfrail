@@ -5,7 +5,7 @@
 \title{Cox model for grouped survival data with discrete shared frailties}
 \usage{
 npdf_cox(formula, groups, data, K = 2, estK = TRUE, criterion = "Laird",
-  eps_conv = 10^-4)
+  eps_conv = 10^-4, se_method = c("louis", "exact"))
 }
 \arguments{
 \item{formula}{A formula expression in conventional R linear modelling
@@ -39,6 +39,16 @@ If \code{FALSE} then the number of latent populations is fixed at \code{K}.}
 \code{"BIC"} for the Bayesian information criterion (TODO REF)}
 
 \item{eps_conv}{convergence tolerance for the EM algorithm}
+
+\item{se_method}{Method or methods used to compute the standard errors.  A character vector containing one or more of the following:
+
+\code{"louis"} The method of Louis (1982) based on an approximation to the information matrix.
+
+\code{"exact"} In this method the standard errors are computed directly from the observed information matrix obtained by analytic differentiation.
+
+\code{"numeric"} This method uses numerical differentiation to approximate the information matrix, and is substantially slower.
+
+By default this is \code{c("louis","exact")}, so that SEs from both these two methods are calculated and presented.   Set \code{se_method=NULL} to compute no standard errors.}
 }
 \value{
 If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors. 
@@ -60,9 +70,10 @@ w_values <- c( 0.8, 1.6 )
 set.seed(1)
 data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 
-test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, K = 4, eps_conv=10^-4)
+test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
 test_res    # optimal model (by all criteria) has 2 latent populations
 test_res$models[[1]] # examine alternative model with 1 latent population 
+
 }
 \references{
 Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
