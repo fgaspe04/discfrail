@@ -22,52 +22,55 @@
 #' \code{\link{Surv}} function from the \pkg{survival} package, and
 #' any covariates are given on the right-hand
 #' side.  For example,
-#' 
+#'
 #' \code{Surv(time, dead) ~ age + sex}
 #'
 #' Only \code{Surv} objects of \code{type="right"} are supported, corresponding to right-censored observations.
-#' 
-#' @param groups name of the variable which indicates the group in which each individual belongs (e.g. the hospital that the individual is treated in).  This can be integer, factor or character.  The name should be unquoted. 
-#' 
+#'
+#' @param groups name of the variable which indicates the group in which each individual belongs (e.g. the hospital that the individual is treated in).  This can be integer, factor or character.  The name should be unquoted.
+#'
 #' @param data A data frame in which to find variables supplied in
 #' \code{formula}.  If not given, the variables should be in the working
 #' environment.
-#' 
+#'
 #' @param K initial number of latent populations, or clusters of groups which have the same discrete frailty.
 #'
 #' @param estK If \code{TRUE} (the default) then multiple models are fitted with number of latent groups ranging from 1 to \code{K}.  The "best fitting" model according to the criterion specified in \code{criterion} is then highlighted when printing the object returned by this function.
 #'
-#' If \code{FALSE} then the number of latent populations is fixed at \code{K}.  
+#' If \code{FALSE} then the number of latent populations is fixed at \code{K}.
 #'
 #' @param criterion Criterion used to choose the best-fitting model to highlight when \code{estK} is \code{TRUE}.
 #'
-#' \code{"Laird"} for the Laird criterion (the default.  TODO REF EXPLAIN)
+#' \code{"Laird"} for the Laird criterion (the default). Running from K latent populations to 1 latent population, this criterium selects the maximum number of latent populations that are non empty as the best K.
 #'
-#' \code{"AIC"} for Akaike's information criterion (TODO REF) 
+#' \code{"AIC"} for Akaike's information criterion (TODO REF)
 #'
-#' \code{"BIC"} for the Bayesian information criterion (TODO REF) 
-#' 
+#' \code{"BIC"} for the Bayesian information criterion (TODO REF)
+#'
 #' @param eps_conv convergence tolerance for the EM algorithm
 #'
 #' @param se_method Method or methods used to compute the standard errors.  A character vector containing one or more of the following:
 #'
 #' \code{"louis"} The method of Louis (1982) based on an approximation to the information matrix.
-#' 
-#' \code{"exact"} In this method the standard errors are computed directly from the observed information matrix obtained by analytic differentiation.
-#' 
-#' \code{"numeric"} This method uses numerical differentiation to approximate the information matrix, and is substantially slower.
-#' 
-#' By default this is \code{c("louis","exact")}, so that SEs from both these two methods are calculated and presented.   Set \code{se_method=NULL} to compute no standard errors.
 #'
-#' @return If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors. 
+#' \code{"exact"} In this method the standard errors are computed directly from the observed information matrix obtained by analytic differentiation.
+#'
+#' \code{"numeric"} This method uses numerical differentiation to approximate the information matrix, and is substantially slower.
+#'
+#' By default this is \code{c("louis","exact")} because these two methods are equally fast. So that SEs from both these two methods are calculated and presented.   Set \code{se_method=NULL} to compute no standard errors.
+#'
+#' @return If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors.
 #'
 #' If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.   Components \code{comparison}, \code{Kopt} and \code{criterion} contain the model comparison statistics, optimal model under each criterion, and the preferred criterion, respectively.
 #'
 #' In either case the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
 #'
 #'
-#' @references Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data". 
-#' 
+#' @references
+#' Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
+#' Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
+#' Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
+#'
 #' @importFrom numDeriv genD
 #' @importFrom Matrix forceSymmetric
 #'
@@ -85,8 +88,8 @@
 #'
 #' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
 #' test_res    # optimal model (by all criteria) has 2 latent populations
-#' test_res$models[[1]] # examine alternative model with 1 latent population 
-#' 
+#' test_res$models[[1]] # examine alternative model with 1 latent population
+#'
 npdf_cox <- function(formula, groups, data,
                      K=2, estK=TRUE, criterion="Laird",
                      eps_conv=10^-4, se_method=c("louis","exact")){
@@ -101,7 +104,7 @@ npdf_cox <- function(formula, groups, data,
   temp[["formula"]] <- formula
   if (missing(data)) temp[["data"]] <- environment(formula)
   mf <- eval(temp, parent.frame())
-  
+
   Y <- model.extract(mf, "response")
   time <- Y[,"time"]
   status <- Y[,"status"]
@@ -117,7 +120,7 @@ npdf_cox <- function(formula, groups, data,
 
   H <- length( unique( groups ) ) #total number of groups
   nt <- length(unique(time))
-  
+
   nobs <- nrow(mf)
   ncovs <- ncol(X)
   cumhaz <- as.data.frame( cbind( hazard=rep( 0, nt ),
@@ -151,19 +154,19 @@ npdf_cox <- function(formula, groups, data,
                                    se_method = se_method)
           k <- k-1
       }
-      ## TODO disagree should truncate AIC selection above at Laird best fit K 
+      ## TODO disagree should truncate AIC selection above at Laird best fit K
 
-      ## Matrix of fit statistics for each model 
-      comparison <- t(sapply(models, 
+      ## Matrix of fit statistics for each model
+      comparison <- t(sapply(models,
                            function(x) unlist(x[c("K_fitted","llik","AIC", "BIC")])
                            ))
       comparison <- as.data.frame(cbind(K=1:K, comparison))
       Kopt <- c("Laird" = max(which(comparison$K == comparison$K_fitted)),
-                "AIC" = which.min(comparison$AIC), 
+                "AIC" = which.min(comparison$AIC),
                 "BIC" = which.min(comparison$BIC))
       res <- list(models=models, comparison=comparison, Kopt=Kopt, criterion=criterion)
       class(res) <- "npdflist"
-  }  else  { 
+  }  else  {
       res <- npdf_core(formula=formula, data=data, K=K,
                        time=time, status=status, groups=groups,
                        X=X, ncovs=ncovs, N=N, H=H, cumhaz=cumhaz,
@@ -192,7 +195,7 @@ npdf_core <- function(formula,
                       eps_conv=10^-4,
                       se_method
                       ){
-    
+
     count <- 0
     not_proper_K <- 0
     eps <- 10^5
@@ -220,7 +223,7 @@ npdf_core <- function(formula,
     numerator <- rep( 0, K )
     E_formula_part <- rep( 0, H )
     alpha <- E_formula <- matrix( 0, nrow = H, ncol = K)
-    
+
     while(eps > eps_conv & count < 200 )
     {
 
@@ -371,10 +374,10 @@ npdf_core <- function(formula,
         BIC = BIC,
         AIC = AIC
     )
-    
+
     if( K_fitted == K )
     {
-        if ("numeric" %in% se_method){ 
+        if ("numeric" %in% se_method){
             ##Numerical computation of standard errors
             if( K != 1 )
             {
@@ -408,7 +411,7 @@ npdf_core <- function(formula,
         }
     }
 
-    
+
     class(res) <- "npdf"
     res
 }

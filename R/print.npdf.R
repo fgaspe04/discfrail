@@ -1,8 +1,8 @@
 ##' Print output from a fitted nonparametric discrete frailty model
 ##'
-##' This function plots Kaplan-Meier estimates of the survival for each fitted latent population. 
+##' This function plots Kaplan-Meier estimates of the survival for each fitted latent population.
 ##'
-##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{pdf_cox(...,estK=FALSE)}}
+##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{npdf_cox(...,estK=FALSE)}}
 ##'
 ##' @param digits Number of significant digits to present, by default \code{max(1, getOption("digits") - 4)}
 ##'
@@ -10,16 +10,16 @@ print.npdf <- function(x, digits = NULL, ...){
     if (is.null(digits))
         digits <- max(1, getOption("digits") - 4)
     if (!is.null(x$call))
-        cat("\nCall:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"), 
+        cat("\nCall:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
             "\n", sep = "")
     with(x, {
         cat(sprintf("\nNonparametric discrete frailty Cox model fit with K=%s latent populations\n\n", K))
         est <- c(beta, p, w[-1])
         cat("Estimated parameters and standard errors:\n")
         res <- data.frame(est=est)
-        if (!is.null(x$seLouis)) res$seLouis <- seLouis 
+        if (!is.null(x$seLouis)) res$seLouis <- seLouis
         if (!is.null(x$seExact)) res$seExact <- seExact
-        if (!is.null(x$seNumeric)) res$seNumeric <- seNumeric 
+        if (!is.null(x$seNumeric)) res$seNumeric <- seNumeric
         fitstr <- sprintf("Log-likelihood %s, AIC %s, BIC %s", llik, BIC, AIC)
         print(res, digits=digits)
         cat("\n")
@@ -30,7 +30,7 @@ print.npdf <- function(x, digits = NULL, ...){
     invisible(x)
 }
 
-##' Print output from a nonparametric discrete frailty modelling procedure with automatic model selection. 
+##' Print output from a nonparametric discrete frailty modelling procedure with automatic model selection.
 ##'
 ##' @param x An object returned by \code{\link{npdf_cox(...,estK=TRUE)}}, containing a list of fitted nonparametric discrete frailty models
 ##'
@@ -40,7 +40,7 @@ print.npdflist <- function(x, digits=NULL, ...){
     if (is.null(digits))
         digits <- max(1, getOption("digits") - 4)
     with(x, {
-        cat("\nCall:\n", paste(deparse(call), sep = "\n", collapse = "\n"), 
+        cat("\nCall:\n", paste(deparse(call), sep = "\n", collapse = "\n"),
             "\n", sep = "")
         cat("\nModel comparison:\n")
         print(comparison)
