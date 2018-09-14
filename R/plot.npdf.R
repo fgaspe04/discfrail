@@ -9,7 +9,8 @@
 ##' @param ... Arguments to pass to \code{\link{plot.survfit}}
 ##'
 ##' @examples ## TODO
-##' 
+##'
+##' @export
 plot.npdf <- function(x, survfit_opts = NULL, ...){
     with(x,{
         Y <- model.extract(mf, "response")
@@ -35,7 +36,7 @@ plot.npdf <- function(x, survfit_opts = NULL, ...){
 ##'
 ##' @examples ## TODO
 ##'
-##' 
+##' @export
 plot.npdflist <- function(x, K=NULL, ...){
     with(x, {
         if (is.null(K))

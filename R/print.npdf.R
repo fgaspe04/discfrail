@@ -8,6 +8,7 @@
 ##'
 ##' @param ... Further options (currently unused)
 ##'
+##' @export
 print.npdf <- function(x, digits = NULL, ...){
     if (is.null(digits))
         digits <- max(1, getOption("digits") - 4)
@@ -40,6 +41,7 @@ print.npdf <- function(x, digits = NULL, ...){
 ##'
 ##' @param ... Further options (currently unused)
 ##'
+##' @export
 print.npdflist <- function(x, digits=NULL, ...){
     if (is.null(digits))
         digits <- max(1, getOption("digits") - 4)

@@ -19,5 +19,4 @@ Survival curves from a nonparametric discrete frailty model chosen by automatic 
 \examples{
 ## TODO
 
-
 }
