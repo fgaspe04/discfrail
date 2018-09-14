@@ -67,7 +67,10 @@
 #'
 #'
 #' @references Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data". 
-#' 
+#'
+#' @import survival
+#' @importFrom stats model.extract model.matrix rnorm rpois runif
+#' @importFrom utils tail
 #' @importFrom numDeriv genD
 #' @importFrom Matrix forceSymmetric
 #'
