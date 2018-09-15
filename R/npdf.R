@@ -71,6 +71,9 @@
 #' Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
 #' Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
 #'
+#' @import survival
+#' @importFrom stats model.extract model.matrix rnorm rpois runif
+#' @importFrom utils tail
 #' @importFrom numDeriv genD
 #' @importFrom Matrix forceSymmetric
 #'

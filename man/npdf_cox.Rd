@@ -5,7 +5,7 @@
 \title{Cox model for grouped survival data with discrete shared frailties}
 \usage{
 npdf_cox(formula, groups, data, K = 2, estK = TRUE, criterion = "Laird",
-  eps_conv = 10^-4)
+  eps_conv = 10^-4, se_method = c("louis", "exact"))
 }
 \arguments{
 \item{formula}{A formula expression in conventional R linear modelling
@@ -32,16 +32,26 @@ If \code{FALSE} then the number of latent populations is fixed at \code{K}.}
 
 \item{criterion}{Criterion used to choose the best-fitting model to highlight when \code{estK} is \code{TRUE}.
 
-\code{"Laird"} for the Laird criterion (the default.  TODO REF EXPLAIN)
+\code{"Laird"} for the Laird criterion (the default). Running from K latent populations to 1 latent population, this criterium selects the maximum number of latent populations that are non empty as the best K.
 
-\code{"AIC"} for Akaike's information criterion (TODO REF) 
+\code{"AIC"} for Akaike's information criterion (TODO REF)
 
 \code{"BIC"} for the Bayesian information criterion (TODO REF)}
 
 \item{eps_conv}{convergence tolerance for the EM algorithm}
+
+\item{se_method}{Method or methods used to compute the standard errors.  A character vector containing one or more of the following:
+
+\code{"louis"} The method of Louis (1982) based on an approximation to the information matrix.
+
+\code{"exact"} In this method the standard errors are computed directly from the observed information matrix obtained by analytic differentiation.
+
+\code{"numeric"} This method uses numerical differentiation to approximate the information matrix, and is substantially slower.
+
+By default this is \code{c("louis","exact")} because these two methods are equally fast. So that SEs from both these two methods are calculated and presented.   Set \code{se_method=NULL} to compute no standard errors.}
 }
 \value{
-If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors. 
+If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors.
 
 If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.   Components \code{comparison}, \code{Kopt} and \code{criterion} contain the model comparison statistics, optimal model under each criterion, and the preferred criterion, respectively.
 
@@ -60,10 +70,13 @@ w_values <- c( 0.8, 1.6 )
 set.seed(1)
 data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
 
-test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=data, K = 4, eps_conv=10^-4)
+test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
 test_res    # optimal model (by all criteria) has 2 latent populations
-test_res$models[[1]] # examine alternative model with 1 latent population 
+test_res$models[[1]] # examine alternative model with 1 latent population
+
 }
 \references{
-Gasperoni F., Ieva F., Paganoni A.M., Jackson C., Sharples L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
+Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
+Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
+Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
 }
