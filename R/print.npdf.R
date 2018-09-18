@@ -29,6 +29,7 @@ print.npdf <- function(x, digits = NULL, ...){
         cat("Log-likelihood:", format(llik, digits=digits), "\n")
         cat("AIC:", format(AIC, digits=digits), "\n")
         cat("BIC:", format(llik, digits=digits), "\n")
+        cat("Fitted K:", format(K_fitted, digits=digits), "\n")
     })
     invisible(x)
 }
