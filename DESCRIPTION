@@ -1,5 +1,5 @@
 Package: discfrail
-Title: Cox models for time-to-event data with nonparametric discrete group-specific frailties.
+Title: Cox models for time-to-event data with nonparametric discrete group-specific frailties
 Version: 0.0.0.9000
 Authors@R: c( person("Francesca", "Gasperoni", email = "francesca.gasperoni@polimi.it", role = c( "aut", "cre" ) ),
               person("Christopher", "Jackson", email = "chris.jackson@mrc-bsu.cam.ac.uk", role = c( "aut") ) )

@@ -14,5 +14,5 @@
 \item{...}{Further options (currently unused)}
 }
 \description{
-Print output from a nonparametric discrete frailty modelling procedure with automatic model selection.
+Prints the model comparison statistics comparing models with different numbers of latent populations, and prints the estimates from the optimal model according to the criterion that was specified when calling \code{\link{npdf_cox}} (by default, the Laird criterion).
 }
