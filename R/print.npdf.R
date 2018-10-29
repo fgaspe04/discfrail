@@ -1,6 +1,6 @@
 ##' Print output from a fitted nonparametric discrete frailty model
 ##'
-##' This function plots Kaplan-Meier estimates of the survival for each fitted latent population.
+##' Prints estimates, standard errors, likelihood and model comparison statistics from a fitted nonparametric discrete frailty model
 ##'
 ##' @param x A fitted nonparametric discrete frailty model, as returned by \code{\link{npdf_cox}} with \code{estK=FALSE}
 ##'
@@ -35,6 +35,8 @@ print.npdf <- function(x, digits = NULL, ...){
 }
 
 ##' Print output from a nonparametric discrete frailty modelling procedure with automatic model selection.
+##'
+##' Prints the model comparison statistics comparing models with different numbers of latent populations, and prints the estimates from the optimal model according to the criterion that was specified when calling \code{\link{npdf_cox}} (by default, the Laird criterion).
 ##'
 ##' @param x An object returned by \code{\link{npdf_cox}} with \code{estK=TRUE}, containing a list of fitted nonparametric discrete frailty models
 ##'
