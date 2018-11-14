@@ -17,7 +17,7 @@
 #'
 #' This function returns a dataset generated from a Weibull proportional hazards model with a shared discrete frailty term, for given Weibull parameters, hazard ratios, distribution of groups among latent populations, frailty values for each latent population, and randomly-generated covariate values.
 #'
-#' @inheritParams simulWeibDiscreteFrailCovNPbaseInv
+#' @inheritParams sim_npdf
 #'
 #' @param lambda Weibull baseline rate parameter (see below), interpreted as the rate parameter with covariate values of 0 and frailty ratio 1.  For \eqn{rho=1} this is the baseline hazard.
 #' 
@@ -25,7 +25,7 @@
 #'
 #' @param beta covariate effects in the Weibull distribution, interpreted as log hazard ratios (see below)
 #' 
-#' @inherit simulWeibDiscreteFrailCovNPbaseInv return
+#' @inherit sim_npdf return
 #'
 #' @details The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
 #' 
@@ -39,11 +39,11 @@
 #' rho <- 1
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' data <- simulWeibDiscreteFrail( N, S, lambda, rho, beta, p, w_values)
+#' data <- sim_weibdf( N, S, lambda, rho, beta, p, w_values)
 #' head( data )
 #'
 
-simulWeibDiscreteFrail <- function( N, S = NULL, lambda, rho, beta, p, w_values )
+sim_weibdf <- function( N, S = NULL, lambda, rho, beta, p, w_values )
 {
   # if S is NULL, we sample the clusters' size from a Poisson with mean = 50
   if( is.null(S) ){

@@ -46,11 +46,11 @@
 #' beta <- 1.6
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
+#' data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values)
 #' head( data )
 
 
-simulWeibDiscreteFrailCovNPbaseInv <- function( N, S = NULL, beta, Lambda_0_inv, p, w_values )
+sim_npdf <- function( N, S = NULL, beta, Lambda_0_inv, p, w_values )
 {
   # if S is NULL, we sample the clusters' size from a Poisson with mean = 50
   if( is.null(S) )

@@ -61,15 +61,6 @@ In either case the data frame used for the fit (the "model frame") is appended a
 This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
 }
 \examples{
-N <- 100
-S <- 40
-Lambda_0_inv = function( t, c=0.01, d=4.6 ) ( t^( 1/d ) )/c
-beta <- 1.6
-p <- c( 0.8, 0.2 )
-w_values <- c( 0.8, 1.6 )
-set.seed(1)
-data <- simulWeibDiscreteFrailCovNPbaseInv( N, S, beta, Lambda_0_inv, p, w_values)
-
 test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
 test_res    # optimal model (by all criteria) has 2 latent populations
 test_res$models[[1]] # examine alternative model with 1 latent population

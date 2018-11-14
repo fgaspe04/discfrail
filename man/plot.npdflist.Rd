@@ -2,21 +2,31 @@
 % Please edit documentation in R/plot.npdf.R
 \name{plot.npdflist}
 \alias{plot.npdflist}
-\title{Survival curves from a nonparametric discrete frailty model chosen by automatic model selection}
+\title{Survival or cumulative hazard curves from a nonparametric discrete frailty model chosen by automatic model selection}
 \usage{
 \method{plot}{npdflist}(x, K = NULL, ...)
 }
 \arguments{
 \item{x}{An object returned by \code{\link{npdf_cox}} with \code{estK=TRUE}, containing a list of fitted nonparametric discrete frailty models}
 
-\item{K}{The number of latent populations which identifies the specific model to plot survival curves for.  By default this is the model selected by the criterion specified when calling \code{\link{npdf_cox}}.}
+\item{K}{The number of latent populations which identifies the specific model to plot estimates from.  By default this is the model selected by the criterion specified when calling \code{\link{npdf_cox}}.}
 
-\item{K}{The number of latent populations which identifies the specific model to plot survival curves for.  By default this is the model selected by the criterion specified when calling \code{\link{npdf_cox}}.}
+\item{...}{Options to customise the plot, passed to \code{\link{plot.npdf}}.  See \code{\link{plot.npdf}} for a description of these.}
 }
 \description{
-Survival curves from a nonparametric discrete frailty model chosen by automatic model selection
+Survival or cumulative hazard curves from a nonparametric discrete frailty model chosen by automatic model selection
 }
 \examples{
-## TODO
+result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
+                   K = 2, eps_conv=10^-4)
+plot(result, K=2)
+plot(result, type="na")
+plot(result, type="na", cols=ifelse(result$belonging==2, "purple", "black"),
+     na_opts = list(xlim=c(0,200), ylim=c(0,2),
+                    xlab="Follow-up days",
+                    ylab="Nelson-Aalen estimate"))
 
+}
+\seealso{
+\code{\link{plot.npdf}}
 }
