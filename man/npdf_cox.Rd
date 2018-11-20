@@ -4,8 +4,9 @@
 \alias{npdf_cox}
 \title{Cox model for grouped survival data with discrete shared frailties}
 \usage{
-npdf_cox(formula, groups, data, K = 2, estK = TRUE, criterion = "Laird",
-  eps_conv = 10^-4, se_method = c("louis", "exact"))
+npdf_cox(formula, groups, data, K = 2, estK = TRUE,
+  criterion = "BIC", eps_conv = 10^-4, se_method = c("louis",
+  "exact"))
 }
 \arguments{
 \item{formula}{A formula expression in conventional R linear modelling
@@ -53,7 +54,13 @@ By default this is \code{c("louis","exact")} because these two methods are equal
 \value{
 If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors.
 
-If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.   Components \code{comparison}, \code{Kopt} and \code{criterion} contain the model comparison statistics, optimal model under each criterion, and the preferred criterion, respectively.
+If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.
+
+\code{comparison} is a matrix composed by \code{K} rows and 5 columns (\code{K}, \code{K_fitted}, \code{llik}, \code{AIC}, \code{BIC}). \code{K_fitted} is the number of estimated latent populations, which can be equal or less than \code{K}. \code{llik} stands for log-likelihood, \code{AIC} for Akaike Information Criterion and \code{BIC} for Bayesian Information Criterion.
+
+\code{Kopt} is optimal model under each criterion.
+
+\code{criterion} is the preferred criterion.
 
 In either case the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
 }
@@ -61,9 +68,9 @@ In either case the data frame used for the fit (the "model frame") is appended a
 This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
 }
 \examples{
-test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
-test_res    # optimal model (by all criteria) has 2 latent populations
-test_res$models[[1]] # examine alternative model with 1 latent population
+test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
+test    # optimal model (by all criteria) has 2 latent populations
+test$models[[1]] # examine alternative model with 1 latent population
 
 }
 \references{

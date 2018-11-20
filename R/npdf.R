@@ -61,7 +61,13 @@
 #'
 #' @return If \code{estK=FALSE} this returns a list of class \code{npdf} which includes information about the model fit, including estimates and standard errors.
 #'
-#' If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.   Components \code{comparison}, \code{Kopt} and \code{criterion} contain the model comparison statistics, optimal model under each criterion, and the preferred criterion, respectively.
+#' If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.
+#'
+#'\code{comparison} is a matrix composed by \code{K} rows and 5 columns (\code{K}, \code{K_fitted}, \code{llik}, \code{AIC}, \code{BIC}). \code{K_fitted} is the number of estimated latent populations, which can be equal or less than \code{K}. \code{llik} stands for log-likelihood, \code{AIC} for Akaike Information Criterion and \code{BIC} for Bayesian Information Criterion.
+#'
+#'\code{Kopt} is optimal model under each criterion.
+#'
+#'\code{criterion} is the preferred criterion.
 #'
 #' In either case the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
 #'
@@ -80,12 +86,12 @@
 #' @export
 #'
 #' @examples
-#' test_res <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
-#' test_res    # optimal model (by all criteria) has 2 latent populations
-#' test_res$models[[1]] # examine alternative model with 1 latent population
+#' test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
+#' test    # optimal model (by all criteria) has 2 latent populations
+#' test$models[[1]] # examine alternative model with 1 latent population
 #'
 npdf_cox <- function(formula, groups, data,
-                     K=2, estK=TRUE, criterion="Laird",
+                     K=2, estK=TRUE, criterion="BIC",
                      eps_conv=10^-4, se_method=c("louis","exact")){
   call <- match.call()
   indx <- match(c("formula", "groups", "data"), names(call), nomatch = 0)
@@ -311,9 +317,9 @@ npdf_core <- function(formula,
 
 
     #function to be numerically optimized
-    sefundeponwbeta = function( x )
+    sefundeponwbeta = function( x ) #length(x) = K-1 + K + ncovs
     {
-      YYfun <- as.numeric( (w_off*exp( x[(2*K):(2*K-1+ncovs)] %*% t(X) )) %*% risk_index ) # nt x 1 contribute from at risk patient
+      YYfun <- as.numeric( (w_off*exp( x[(2*K):(2*K-1+ncovs)] %*% t(X) )) %*% risk_index ) # nt x 1 contribute from at risk patient #x[(2*K):(2*K-1+ncovs)] are betas
       hazfun <- N/YYfun
       cumhazfun <- cumsum(hazfun)
 
@@ -329,9 +335,9 @@ npdf_core <- function(formula,
         firsttermtmp <- status[hospj]*log(haz0t*ebz)
         firstterm <- sum(firsttermtmp[haz0t>0,])
 
-        secondtermtmp <- -sum(lam0t * ebz) * x[(K):(2*K-1)]
+        secondtermtmp <- -sum(lam0t * ebz) * x[(K):(2*K-1)] #x[(K):(2*K-1)] are w_1,..,w_K
         wpowerD <- x[(K):(2*K-1)]^D[j]
-        secondterm <- log(sum(exp(secondtermtmp)*wpowerD*c(x[1:(K-1)],1-sum(x[1:(K-1)]))))
+        secondterm <- log(sum(exp(secondtermtmp)*wpowerD*c(x[1:(K-1)],1-sum(x[1:(K-1)])))) #x[1:(K-1)] are pi_1,..,\pi_{K-1}
 
         lfull[j] <- firstterm+secondterm
       }
@@ -376,15 +382,27 @@ npdf_core <- function(formula,
             if( K != 1 )
             {
                 deriv <- numDeriv::genD( sefundeponwbeta, c( p[1:(K-1)], w, beta_hat ), method = "Richardson" )
+                info <- matrix(0, 2*K-1+ncovs, 2*K-1+ncovs)
+                info[upper.tri(info, diag=T)] <- deriv$D[(2*K+ncovs):(2*K-1+ncovs+(2*K+ncovs-1)*(2*K+ncovs)/2)]
+                info <- Matrix::forceSymmetric(info)
+                infoNumeric <- solve(-info)
+                res$varcovNumeric = infoNumeric
+                res$seNumeric = NULL
+                res$seNumeric[ 1:( K - 1 ) ] = sqrt(diag(infoNumeric))[ 1:( K - 1 ) ]
+                res$seNumeric[ ( K ) ] = '-'
+                res$seNumeric[ ( K + 1 ):( 2*K - 1 ) ] = sqrt( (w[-1]/w[1])^2*((sqrt(diag(infoNumeric))[ (K + 1):(2*K - 1) ]/w[-1])^2+( sqrt(diag(infoNumeric))[ K ]/w[1])^2-2*infoNumeric[ (K + 1):(2*K - 1), K ]/(w[-1]*w[1])) )
+                res$seNumeric[ (2*K):( 2*K + ncovs - 1 ) ] = sqrt(diag(infoNumeric))[ (2*K):( 2*K + ncovs - 1 ) ]
             }else{
                 deriv <- numDeriv::genD( sefundeponwbeta, c( w, beta_hat), method = "Richardson" )
+                info <- matrix(0, 2*K-1+ncovs, 2*K-1+ncovs)
+                info[upper.tri(info, diag=T)] <- deriv$D[(2*K+ncovs):(2*K-1+ncovs+(2*K+ncovs-1)*(2*K+ncovs)/2)]
+                info <- Matrix::forceSymmetric(info)
+                infoNumeric <- solve(-info)
+                res$varcovNumeric = infoNumeric
+                res$seNumeric = NULL
+                res$seNumeric[ 1: (ncovs+1) ] = c( '-', sqrt(diag(infoNumeric))[ 2:( ncovs + 1 ) ] )
             }
-            info <- matrix(0, 2*K-1+ncovs, 2*K-1+ncovs)
-            info[upper.tri(info, diag=T)] <- deriv$D[(2*K+ncovs):(2*K-1+ncovs+(2*K+ncovs-1)*(2*K+ncovs)/2)]
-            info <- Matrix::forceSymmetric(info)
-            infoNumeric <- solve(-info)
-            res$varcovNumeric = infoNumeric
-            res$seNumeric = sqrt(diag(infoNumeric))
+
         }
 
         if ("louis" %in% se_method){
@@ -394,14 +412,32 @@ npdf_core <- function(formula,
             ESES <- Iy( ncovs, alpha, w, p, D, sumhaz, lamroutlam0, dsumhaz)
             stderr_covariance <- information_matrix( expectedS = EStS, expectedB = EB, expectedSexpectedS = ESES )
             res$varcovLouis = stderr_covariance[[1]]
-            res$seLouis = stderr_covariance[[2]]
+            res$seLouis = NULL
+            if( K != 1 ){
+              res$seLouis = NULL
+              res$seLouis[ 1:( K - 1 ) ] = stderr_covariance[[2]][ 1:( K - 1 ) ]
+              res$seLouis[ ( K ) ] = '-'
+              res$seLouis[ ( K + 1 ):( 2*K - 1 ) ] = sqrt( (w[-1]/w[1])^2*((stderr_covariance[[2]][ (K + 1):(2*K - 1) ]/w[-1])^2+( stderr_covariance[[2]][ K ]/w[1])^2-2*stderr_covariance[[1]][ (K + 1):(2*K - 1), K ]/(w[-1]*w[1])) )
+              res$seLouis[ (2*K):( 2*K + ncovs - 1 ) ] = stderr_covariance[[2]][ (2*K):( 2*K + ncovs - 1 ) ]
+            }else{
+              res$seLouis[ 1:( ncovs + 1 ) ] = c( '-', stderr_covariance[[2]][ 2:( ncovs + 1 ) ])
+            }
         }
         if ("exact" %in% se_method){
             ##Exact second derivativefor standard errors
             SecDer <- exact_sec_der( ncovs, w, p, D, sumhaz, dsumhaz, d2sumhaz,lamsum )
             InfoFisher <- solve( -SecDer )
             res$varcovExact = InfoFisher
-            res$seExact = sqrt(diag(InfoFisher))
+            res$seExact = NULL
+            if( K != 1 ){
+              res$seExact = NULL
+              res$seExact[ 1:( K - 1 ) ] = sqrt(diag(InfoFisher))[ 1:( K - 1 ) ]
+              res$seExact[ ( K ) ] = '-'
+              res$seExact[ ( K + 1 ):( 2*K - 1 ) ] = sqrt( (w[-1]/w[1])^2*((sqrt(diag(InfoFisher))[ (K + 1):(2*K - 1) ]/w[-1])^2+( sqrt(diag(InfoFisher))[ K ]/w[1])^2-2*InfoFisher[ (K + 1):(2*K - 1), K ]/(w[-1]*w[1])) )
+              res$seExact[ (2*K):( 2*K + ncovs - 1 ) ] = sqrt(diag(InfoFisher))[ (2*K):( 2*K + ncovs - 1 ) ]
+            }else{
+              res$seExact[ 1:( ncovs + 1 ) ] = c( '-', sqrt(diag(InfoFisher))[ 2:( ncovs + 1 ) ])
+            }
         }
     }
 
