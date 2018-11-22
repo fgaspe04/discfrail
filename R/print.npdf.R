@@ -17,18 +17,21 @@ print.npdf <- function(x, digits = NULL, ...){
             "\n", sep = "")
     with(x, {
         cat(sprintf("\nNonparametric discrete frailty Cox model fit with K=%s latent populations\n\n", K))
-        est <- c(beta, p, w[-1])
+        est <- c(p, w[-1], beta)#c(beta, p, w[-1])
         cat("Estimated parameters and standard errors:\n")
         res <- data.frame(est=est)
         if (!is.null(x$seLouis)) res$seLouis <- seLouis
         if (!is.null(x$seExact)) res$seExact <- seExact
         if (!is.null(x$seNumeric)) res$seNumeric <- seNumeric
+        if( K!=1 ){
+          rownames( res )[1:(2*K-1)] =  c(paste("p",1:K, sep=""), paste( paste("w",2:K, sep=""),"/", rep("w1",(K-1)), sep="" ))
+        }
         fitstr <- sprintf("Log-likelihood %s, AIC %s, BIC %s", llik, BIC, AIC)
         print(res, digits=digits)
         cat("\n")
         cat("Log-likelihood:", format(llik, digits=digits), "\n")
         cat("AIC:", format(AIC, digits=digits), "\n")
-        cat("BIC:", format(llik, digits=digits), "\n")
+        cat("BIC:", format(BIC, digits=digits), "\n")
         cat("Fitted K:", format(K_fitted, digits=digits), "\n")
     })
     invisible(x)
