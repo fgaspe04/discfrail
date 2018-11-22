@@ -7,7 +7,7 @@
 \method{plot}{survfit_npdf}(x, xlab = NULL, ylab = NULL, cols = NULL, ...)
 }
 \arguments{
-\item{x}{Object returned by \code{\link{nelsonaalen_npdf}} representing Nelson-Aalen estimates from a nonparametric discrete frailty model}
+\item{x}{Object returned by \code{\link{survfit_npdf}} representing Kaplan-Meier estimates from a nonparametric discrete frailty model}
 
 \item{xlab}{x-axis label}
 

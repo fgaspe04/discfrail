@@ -14,5 +14,5 @@
 \item{...}{Further options (currently unused)}
 }
 \description{
-This function plots Kaplan-Meier estimates of the survival for each fitted latent population.
+Prints estimates, standard errors, likelihood and model comparison statistics from a fitted nonparametric discrete frailty model
 }

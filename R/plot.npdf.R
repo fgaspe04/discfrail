@@ -180,6 +180,8 @@ survfit_npdf <- function(x, survfit_opts = NULL){
 
 ##' Plot Kaplan-Meier estimates of group-specific cumulative hazard from a nonparametric discrete frailty model
 ##'
+##' @param x Object returned by \code{\link{survfit_npdf}} representing Kaplan-Meier estimates from a nonparametric discrete frailty model
+##'
 ##' @inheritParams plot.nelsonaalen_npdf
 ##'
 ##' @seealso \code{\link{plot.npdf}}, \code{\link{survfit_npdf}}
