@@ -372,7 +372,8 @@ npdf_core <- function(formula,
         belonging = belonging,
         llik = llik,
         BIC = BIC,
-        AIC = AIC
+        AIC = AIC,
+        alpha = alpha
     )
 
     if( K_fitted == K )
@@ -389,7 +390,7 @@ npdf_core <- function(formula,
                 res$varcovNumeric = infoNumeric
                 res$seNumeric = NULL
                 res$seNumeric[ 1:( K - 1 ) ] = sqrt(diag(infoNumeric))[ 1:( K - 1 ) ]
-                res$seNumeric[ ( K ) ] = '-'
+                res$seNumeric[ K ] = sqrt( sum( infoNumeric[ ( 1:( K - 1 ) ), ( 1:( K - 1 ) ) ] ) )
                 res$seNumeric[ ( K + 1 ):( 2*K - 1 ) ] = sqrt( (w[-1]/w[1])^2*((sqrt(diag(infoNumeric))[ (K + 1):(2*K - 1) ]/w[-1])^2+( sqrt(diag(infoNumeric))[ K ]/w[1])^2-2*infoNumeric[ (K + 1):(2*K - 1), K ]/(w[-1]*w[1])) )
                 res$seNumeric[ (2*K):( 2*K + ncovs - 1 ) ] = sqrt(diag(infoNumeric))[ (2*K):( 2*K + ncovs - 1 ) ]
             }else{
@@ -400,7 +401,7 @@ npdf_core <- function(formula,
                 infoNumeric <- solve(-info)
                 res$varcovNumeric = infoNumeric
                 res$seNumeric = NULL
-                res$seNumeric[ 1: (ncovs+1) ] = c( '-', sqrt(diag(infoNumeric))[ 2:( ncovs + 1 ) ] )
+                res$seNumeric[ 1: (ncovs) ] = sqrt(diag(infoNumeric))[ 2:( ncovs + 1 ) ]
             }
 
         }
@@ -416,11 +417,11 @@ npdf_core <- function(formula,
             if( K != 1 ){
               res$seLouis = NULL
               res$seLouis[ 1:( K - 1 ) ] = stderr_covariance[[2]][ 1:( K - 1 ) ]
-              res$seLouis[ ( K ) ] = '-'
+              res$seLouis[ K ] = sqrt( sum( stderr_covariance[[1]][ ( 1:( K - 1 ) ), ( 1:( K - 1 ) ) ] ) )
               res$seLouis[ ( K + 1 ):( 2*K - 1 ) ] = sqrt( (w[-1]/w[1])^2*((stderr_covariance[[2]][ (K + 1):(2*K - 1) ]/w[-1])^2+( stderr_covariance[[2]][ K ]/w[1])^2-2*stderr_covariance[[1]][ (K + 1):(2*K - 1), K ]/(w[-1]*w[1])) )
               res$seLouis[ (2*K):( 2*K + ncovs - 1 ) ] = stderr_covariance[[2]][ (2*K):( 2*K + ncovs - 1 ) ]
             }else{
-              res$seLouis[ 1:( ncovs + 1 ) ] = c( '-', stderr_covariance[[2]][ 2:( ncovs + 1 ) ])
+              res$seLouis[ 1:( ncovs ) ] = stderr_covariance[[2]][ 2:( ncovs + 1 ) ]
             }
         }
         if ("exact" %in% se_method){
@@ -432,11 +433,11 @@ npdf_core <- function(formula,
             if( K != 1 ){
               res$seExact = NULL
               res$seExact[ 1:( K - 1 ) ] = sqrt(diag(InfoFisher))[ 1:( K - 1 ) ]
-              res$seExact[ ( K ) ] = '-'
+              res$seExact[ ( K ) ] = sqrt( sum( InfoFisher[ ( 1:( K - 1 ) ), ( 1:( K - 1 ) ) ] ) )
               res$seExact[ ( K + 1 ):( 2*K - 1 ) ] = sqrt( (w[-1]/w[1])^2*((sqrt(diag(InfoFisher))[ (K + 1):(2*K - 1) ]/w[-1])^2+( sqrt(diag(InfoFisher))[ K ]/w[1])^2-2*InfoFisher[ (K + 1):(2*K - 1), K ]/(w[-1]*w[1])) )
               res$seExact[ (2*K):( 2*K + ncovs - 1 ) ] = sqrt(diag(InfoFisher))[ (2*K):( 2*K + ncovs - 1 ) ]
             }else{
-              res$seExact[ 1:( ncovs + 1 ) ] = c( '-', sqrt(diag(InfoFisher))[ 2:( ncovs + 1 ) ])
+              res$seExact[ 1:( ncovs ) ] = sqrt(diag(InfoFisher))[ 2:( ncovs + 1 ) ]
             }
         }
     }

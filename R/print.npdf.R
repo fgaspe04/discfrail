@@ -17,7 +17,11 @@ print.npdf <- function(x, digits = NULL, ...){
             "\n", sep = "")
     with(x, {
         cat(sprintf("\nNonparametric discrete frailty Cox model fit with K=%s latent populations\n\n", K))
-        est <- c(p, w[-1], beta)#c(beta, p, w[-1])
+        if( K != 1 ){
+          est <- c(p, w[-1], beta)
+        }else{
+          est <- c( beta )
+        }
         cat("Estimated parameters and standard errors:\n")
         res <- data.frame(est=est)
         if (!is.null(x$seLouis)) res$seLouis <- seLouis

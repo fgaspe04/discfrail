@@ -4,8 +4,8 @@
 \alias{plot.nelsonaalen_npdf}
 \title{Plot Nelson-Aalen estimates of group-specific cumulative hazard from a nonparametric discrete frailty model}
 \usage{
-\method{plot}{nelsonaalen_npdf}(x, xlim = NULL, ylim = NULL, xlab = NULL,
-  ylab = NULL, cols = NULL, ...)
+\method{plot}{nelsonaalen_npdf}(x, xlim = NULL, ylim = NULL,
+  xlab = NULL, ylab = NULL, cols = NULL, ...)
 }
 \arguments{
 \item{x}{Object returned by \code{\link{nelsonaalen_npdf}} representing Nelson-Aalen estimates from a nonparametric discrete frailty model}

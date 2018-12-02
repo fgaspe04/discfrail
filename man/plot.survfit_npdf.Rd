@@ -4,7 +4,8 @@
 \alias{plot.survfit_npdf}
 \title{Plot Kaplan-Meier estimates of group-specific cumulative hazard from a nonparametric discrete frailty model}
 \usage{
-\method{plot}{survfit_npdf}(x, xlab = NULL, ylab = NULL, cols = NULL, ...)
+\method{plot}{survfit_npdf}(x, xlab = NULL, ylab = NULL, cols = NULL,
+  ...)
 }
 \arguments{
 \item{x}{Object returned by \code{\link{survfit_npdf}} representing Kaplan-Meier estimates from a nonparametric discrete frailty model}
