@@ -4,12 +4,12 @@
 \alias{sim_weibdf}
 \title{Simulation of grouped time-to-event data with Weibull baseline hazard and discrete shared frailty distribution}
 \usage{
-sim_weibdf(N, S = NULL, lambda, rho, beta, p, w_values)
+sim_weibdf(J, N = NULL, lambda, rho, beta, p, w_values, cens_perc)
 }
 \arguments{
-\item{N}{number of groups in the data}
+\item{J}{number of groups in the data}
 
-\item{S}{number of individuals in each group}
+\item{N}{number of individuals in each group}
 
 \item{lambda}{Weibull baseline rate parameter (see below), interpreted as the rate parameter with covariate values of 0 and frailty ratio 1.  For \eqn{rho=1} this is the baseline hazard.}
 
@@ -20,13 +20,15 @@ sim_weibdf(N, S = NULL, lambda, rho, beta, p, w_values)
 \item{p}{vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups.}
 
 \item{w_values}{vector of K distinct frailty values, one for each latent population.}
+
+\item{cens_perc}{percentage of censored events}
 }
 \value{
-A data frame with one row for each simulated individual, and the following columns: 
+A data frame with one row for each simulated individual, and the following columns:
 
 \code{family}: the group which the individual is in (integers 1, 2, ...)
 
-\code{time}: the simulated event time 
+\code{time}: the simulated event time
 
 \code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
 
@@ -41,14 +43,15 @@ This function returns a dataset generated from a Weibull proportional hazards mo
 The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
 }
 \examples{
-N <- 100
-S <- 40
+J <- 100
+N <- 40
 lambda <- 0.5
 beta <- 1.6
 rho <- 1
 p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
-data <- sim_weibdf( N, S, lambda, rho, beta, p, w_values)
+cens_perc <- 0.2
+data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_perc)
 head( data )
 
 }

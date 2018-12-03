@@ -20,38 +20,45 @@
 #' @inheritParams sim_npdf
 #'
 #' @param lambda Weibull baseline rate parameter (see below), interpreted as the rate parameter with covariate values of 0 and frailty ratio 1.  For \eqn{rho=1} this is the baseline hazard.
-#' 
+#'
 #' @param rho Weibull shape parameter (see below)
 #'
 #' @param beta covariate effects in the Weibull distribution, interpreted as log hazard ratios (see below)
-#' 
+#'
+#' @param p vector of K elements.  The kth element gives the proportion of groups in the kth latent population of groups.
+#'
+#' @param w_values vector of K distinct frailty values, one for each latent population.
+#'
+#' @param cens_perc percentage of censored events
+#'
 #' @inherit sim_npdf return
 #'
 #' @details The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
-#' 
+#'
 #' @export
 #'
 #' @examples
-#' N <- 100
-#' S <- 40
+#' J <- 100
+#' N <- 40
 #' lambda <- 0.5
 #' beta <- 1.6
 #' rho <- 1
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' data <- sim_weibdf( N, S, lambda, rho, beta, p, w_values)
+#' cens_perc <- 0.2
+#' data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_perc)
 #' head( data )
 #'
 
-sim_weibdf <- function( N, S = NULL, lambda, rho, beta, p, w_values )
+sim_weibdf <- function( J, N = NULL, lambda, rho, beta, p, w_values, cens_perc )
 {
-  # if S is NULL, we sample the clusters' size from a Poisson with mean = 50
-  if( is.null(S) ){
-    S <- rpois( N, 50  )
+  # if N is NULL, we sample the clusters' size from a Poisson with mean = 50
+  if( is.null(N) ){
+    N <- rpois( J, 50  )
   }
 
   # n is the total sample size
-  n <- ifelse( length( S ) > 1, sum( S ), S*N )
+  n <- ifelse( length( N ) > 1, sum( N ), N*J )
 
   # covariate is sample from a normal
   x <- matrix( 0, nrow = n, ncol = length( beta ) )
@@ -62,26 +69,26 @@ sim_weibdf <- function( N, S = NULL, lambda, rho, beta, p, w_values )
   }
 
   # frailty term for each group
-  w <- rep( w_values, round( p*N ) )
+  w <- rep( w_values, round( p*J ) )
 
-  # because of round function we can have length( w ) != N
-  if( length( w ) < N )
+  # because of round function we can have length( w ) != J
+  if( length( w ) < J )
   {
     w <- c( w, tail( w, 1 ) )
-  }else if( length( w ) > N )
+  }else if( length( w ) > J )
   {
-    length( w ) <-  N
+    length( w ) <-  J
   }
 
   #we shuffle the w
-  index_shuffled = sample( 1:N )
+  index_shuffled = sample( 1:J )
   w = w[ index_shuffled ]
 
-  # if S is given as a number, all groups are of the same size
-  if( length( S ) == 1 ){
-    coef = rep( S, N )
+  # if N is given as a number, all groups are of the same size
+  if( length( N ) == 1 ){
+    coef = rep( N, J )
   }else{
-    coef = S
+    coef = N
   }
 
   # frailty term for each individual
@@ -92,18 +99,21 @@ sim_weibdf <- function( N, S = NULL, lambda, rho, beta, p, w_values )
   Tlat <- (- log(v) / (lambda * w_tot * exp(x %*% beta) ) )^(1 / rho)
 
   # fixing parameters for the censoring distribution
-  mean_cens <- mean(Tlat)
-  var_cens <- mean(Tlat)/10
-
-  # computing censoring times
-  C <- rnorm( n, mean_cens, var_cens)
+  if( cens_perc != 0 ){
+    mean_cens = quantile( Tlat, 1 - cens_perc ) #mean(Tlat)
+    var_cens = sd( Tlat[ ( ( 1 - cens_perc )*length( Tlat ) ):length( Tlat ) ] )/sqrt( length( Tlat ) ) #mean(Tlat)/10
+    # computing censoring times
+    C = rnorm( n, mean_cens, var_cens)
+  }else{
+    C = rep( max(Tlat) + 1, n )
+  }
 
   # follow-up times and event indicators
   time <- pmin( Tlat, C )
   status <- as.numeric( Tlat <= C )
 
   # data set
-  data.frame(family=rep( 1:N, coef ),
+  data.frame(family=rep( 1:J, coef ),
              time=time,
              status=status,
              x=x,

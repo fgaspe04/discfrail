@@ -22,24 +22,30 @@
 ##' plot( result, type="km" )
 ##' plot(result, cols=ifelse(result$belonging==1, "purple", "black"), xlim=c(0, 150))
 ##'
-##' ## use of survfit_opts.  show only first 10 groups 
+##' ## use of survfit_opts.  show only first 10 groups
 ##' plot(result, survfit_opts = list(subset = (weibdata20$family >= 10) ))
 ##'
 ##' plot(result, type="na" )
-##' 
-##' ## use of na_opts to customise the Nelson-Aalen plot 
+##'
+##' ## use of na_opts to customise the Nelson-Aalen plot
 ##' plot(result, type="na", cols=ifelse(result$belonging==2, "purple", "black"),
 ##'      na_opts = list(xlim=c(0,200), ylim=c(0,2),
 ##'                     xlab="Follow-up days",
 ##'                     ylab="Nelson-Aalen estimate"))
-##' 
+##'
 ##' @importFrom graphics lines plot lines.default plot.default
 ##' @importFrom stats knots stepfun plot.stepfun
-##' 
+##'
 ##' @export
 plot.npdf <- function(x, type="km", cols=NULL, survfit_opts = NULL, na_opts = NULL, ...){
     type <- match.arg(type, c("km", "na"))
-    if (is.null(cols)) cols <- x$belonging
+    if (is.null(cols)){
+      cols = rep( 0, length( x$belonging ) )
+      for( i in unique( x$belonging ) )
+      {
+        cols[ x$belonging == i ] = max( x$belonging ) - i + 1
+      }
+    }
     if( type=="na"){
         object <- c(list(nelsonaalen_npdf(x)), list(cols=cols))
         do.call("plot.nelsonaalen_npdf", c(object, na_opts))
@@ -69,7 +75,7 @@ plot.npdf <- function(x, type="km", cols=NULL, survfit_opts = NULL, na_opts = NU
 ##'                     ylab="Nelson-Aalen estimate"))
 ##'
 ##' @seealso \code{\link{plot.npdf}}
-##' 
+##'
 ##' @export
 plot.npdflist <- function(x, K=NULL, ...){
     if (is.null(K)) K <- x$Kopt[x$criterion]
@@ -80,30 +86,30 @@ plot.npdflist <- function(x, K=NULL, ...){
 }
 
 ##' Nelson-Aalen estimates of group-specific cumulative hazard from a nonparametric discrete frailty model
-##' 
+##'
 ##' @inheritParams plot.npdf
 ##'
 ##' @return A list of objects of length equal to the number of groups in the data.  Each component is a list, equivalent to the output of \code{\link{survfit}} called for the corresponding group with \code{type="fh"}, but with two additional components:
 ##'
 ##' \code{y0}:  -\code{-log} of the survival estimate
-##' 
-##' \code{sfun0}:  a step function for \code{y0} in terms of time, estimated using \code{\link{stepfun}}. 
 ##'
-##' @seealso \code{\link{plot.nelsonaalen_npdf}}, \code{\link{plot.npdf}}. 
+##' \code{sfun0}:  a step function for \code{y0} in terms of time, estimated using \code{\link{stepfun}}.
+##'
+##' @seealso \code{\link{plot.nelsonaalen_npdf}}, \code{\link{plot.npdf}}.
 ##'
 ##' @examples
 ##' x <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
 ##'                estK=FALSE, eps_conv=10^-4)
 ##' object <- nelsonaalen_npdf(x)
-##' 
-##' @export 
+##'
+##' @export
 nelsonaalen_npdf <- function(x){
     Y <- model.extract(x$mf, "response")
     Y <- as.data.frame(unclass(Y))
     groups <- model.extract(x$mf, "groups")
     Y$pop <- rep(x$belonging, table(groups))
     ngrp <- length(unique(groups))
-    res <- vector(ngrp, mode="list") 
+    res <- vector(ngrp, mode="list")
     for (i in seq(length=ngrp)){
         est <- survfit(Surv(time, status) ~ 1 , data = Y[groups ==  i, ], type="fh")
         est$y0 <- c( 0, -log( est$surv ) )
@@ -120,18 +126,18 @@ nelsonaalen_npdf <- function(x){
 ##' @param x Object returned by \code{\link{nelsonaalen_npdf}} representing Nelson-Aalen estimates from a nonparametric discrete frailty model
 ##'
 ##' @param xlim x-axis limits (vector of 2)
-##' 
+##'
 ##' @param ylim x-axis limits (vector of 2)
-##' 
+##'
 ##' @param xlab x-axis label
-##' 
+##'
 ##' @param ylab y-axis label
 ##'
 ##' @param cols vector of colour names or numbers, of the same length as the number of groups
 ##'
 ##' @param ... options to pass to the generic \code{plot} function
 ##'
-##' @examples 
+##' @examples
 ##'
 ##'  x <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
 ##'                 estK=FALSE, eps_conv=10^-4)
@@ -142,7 +148,7 @@ nelsonaalen_npdf <- function(x){
 ##'      cols=ifelse(x$belonging==2, "purple", "black"))
 ##'
 ##' @seealso \code{\link{nelsonaalen_npdf}}
-##' 
+##'
 ##' @export
 plot.nelsonaalen_npdf <- function(x, xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL, cols=NULL, ...){
     ngrp <- length(x)
@@ -196,7 +202,7 @@ survfit_npdf <- function(x, survfit_opts = NULL){
 ##'
 ##' @export
 plot.survfit_npdf <- function(x, xlab=NULL, ylab=NULL, cols=NULL, ...){
-    # plot.survfit chooses sensible defaults for axis limits 
+    # plot.survfit chooses sensible defaults for axis limits
     if (is.null(xlab)) xlab <- 'Time'
     if (is.null(ylab)) ylab <- 'Survival'
     if (is.null(cols)) cols <- attr(x, "belonging")

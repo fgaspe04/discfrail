@@ -1,0 +1,284 @@
+---
+title: "discfrail"
+author: "Francesca Gasperoni"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  rmarkdown::html_vignette:
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    classoption: 14pt
+    citation_package: natbib
+bibliography: biblio.bib
+csl: acm.csl
+vignette: >
+  %\VignetteIndexEntry{discfrail}
+  %\VignetteEngine{knitr::rmarkdown_notangle} 
+  %\VignetteEncoding{UTF-8}
+---
+\fontsize{12}{22}
+\selectfont
+\newcommand{\bX}{\textbf{X}}
+\newcommand{\bY}{\textbf{Y}}
+\newcommand{\bbeta}{\boldsymbol{\beta}}
+
+# Introduction
+
+Package **discfrail** (**disc**rete **frail**ty) is 
+an `R` package that provides novel method to deal with hierarchcal time-to-event data in which a clustering structure of groups is suspetcted.
+The package contains the implementation of the Cox model with a  nonparametric discrete frailty term [@gasperoni2018nonparam] and two functions for simulating data.
+
+# Notation and Model
+Consider a random sample with a hierarchical structure, i.e, where each statistical unit belongs to one group. Define $T_{ij}^*$ as the survival time and $C_{ij}$ as the censoring time of subject $i$, $i = 1,...,n_j$, in the $j$-th group, $j=1,...,J$. Let $\bX_{ij} = (X_{ij1}, . . . , X_{ijp} )^T$ be the vector of covariates, assumed constant over time, for subject $i$ in group $j$. Then, we define $T_{ij} = min(T_{ij}^*, C_{ij})$, $t_{ij}$ its realization and $\delta_{ij} = \mathbf{1}_{(T_{ij}^* \leq C_{ij} )}$.
+Let $\tilde{\textbf{w}}$ be the vector of shared random effects, and \textbf{w}, $\textbf{w}=\exp\{\tilde{\textbf{w}}\}$, be the vector of shared frailties. In `discfrail` package, we consider a nonparametric frailty term, which is modeled through a random variable with discrete distribution, with an unknown number of points in the support. In particular, we assume that each group $j$ can belong to one latent population $k$, $k=1,...,K$, with probability $\pi_{k}$. In this case, $w_1,...,w_K$ are the points in the support of $w$, $K$ is the support's cardinality and $\mathbb{P}\{w=w_k\}=\pi_k$.
+
+We introduce also an auxiliary indicator random variable $z_{jk}$ which is equal to $1$ if the $j$-th group belongs to the $k$-th population, so, considering k as a fixed term,  $z_{jk} \overset{i.i.d}{\sim} Bern(\pi_{k})$.
+
+
+The requirement $\sum_{k=1}^K z_{jk} = 1$, for each $j$, is equivalent to the assumption that each group belongs to only one population.
+The vector $\mathbf{z}_{j}$ is distributed as a multinomial. Note that there are two levels of clustering: the first one is known (i.e., healthcare providers as clusters of patients) and we refer to these clusters as *groups*, while the second level is the unknown clustering of healthcare providers that we want to detect and we refer to these clusters as *latent populations*.
+
+Than, the hazard function for individual $i$ in group $j$ conditional on w and on $z_{jk}$ is: 
+\begin{equation}
+\lambda(t;\bX_{ij},w_k,z_{jk})=\prod_{k=1}^{K}\left[\lambda_0(t) w_k \exp(\bX_{ij}^T\bbeta)\right]^{z_{jk}},
+\label{eq:hazardnonparam}
+\end{equation}
+
+\noindent
+where $\lambda_0(t)$ represents the baseline hazard, $\bbeta$ is the vector of regression coefficients and $w_k$ is the frailty term shared among groups of the same latent population $k$. Both the frailty and the baseline hazard are assumed to be nonparametric, which makes model \eqref{eq:hazardnonparam} an extension of a proportional hazard Cox model.
+
+We assume that censoring is noninformative, thus that $T_{ij}^*$ and $C_{ij}$ are conditionally independent, given $\bX_{ij}$, $w_k$ and $z_{jk}$.
+
+A real example of this theoretical structure is the time-to-readmission in hospital recorded for patients that are grouped in healthcare providers (Section 5 of @gasperoni2018nonparam). 
+
+
+# Simulation of hierarchical time-to-event data with a latent clustering structure of groups
+Two functions are focused on the simulation of hierarchical time-to-event data in which a clustering structure of groups is present. 
+
+The input parameters of the simulation algorithm are: 
+
+* $J$: the number of  groups;
+* $N_j$: the number of individuals in each group ($N_j$ can be a *scalar* and in this case $N_j$ is assumed to be equal in all groups; $N_j$ can be a *vector*, $J$ x $1$, or it can be *NULL* in that case $N_j \overset{i.i.d.}{\sim} Poisson(50)$);
+* $\Lambda_0(t)$: the cumulative baseline hazard;
+* $\boldsymbol{\pi}$: the K-dimensional probability vector of belonging to a single population;
+* **w**: the K-dimensional frailty vector;
+* $\boldsymbol{\beta}$: the vector of regression parameters;
+* the percentage of censored events.
+
+Several steps are needed for building the dataset. The simulation model proposed in this work is based on the paper by @bender2005generating. We use two probability results to obtain Eq.\eqref{invthm}: the inverse probability method and the fact that if a generic random variable V is distributed as $\mathcal{U}[0,1]$ then $1-V$ is still a $\mathcal{U}[0,1]$.
+
+\begin{equation}
+U_{ij} = 1-F(t_{ij}; \bX_{ij},w) = \exp\{ -\Lambda_0(T_{ij}) w_k \exp\{X_{ij}^T \beta\}\} \sim \mathcal{U}[0,1]
+\label{invthm}
+\end{equation}
+
+Then, we are able to compute the survival times with Eq.\eqref{survtime} by inverting Eq.\eqref{invthm}. 
+\begin{equation}
+T_{ij} = \Lambda_0^{-1}\left(\frac{-\log(U_{ij})}{w_k\exp\{\bX_{ij}^T \beta\}}\right)
+\label{survtime}
+\end{equation}
+The main difference between equations \eqref{invthm}, \eqref{survtime} and the ones showed in @bender2005generating is the frailty term, $w_k$.
+
+The covariates are randomly generated and normally distributed, $\bX_{ij} \overset{i.i.d.}{\sim} N(0,1)$.
+
+Exploiting equations \eqref{invthm} and \eqref{survtime} we are able to compute the times $T_{ij}$. Then, we generate the censoring times according to a Normal distribution, independently from the $T_{ij}$. Tuning the mean and the variance of this distribution, we have a higher (or lower) percentage of censored statistical units.
+Finally, we obtain the status variable as: $\delta_{ij} = \mathbf{1}_{(T_{ij}^* \leq C_{ij} )}$.
+
+A key point is the choice of the baseline. We propose two functions to address this issue: 
+
+* `sim_weibdf`, a parametric baseline (a Weibull distributed $\lambda_0(t_{ij})$ characterised by two paramters $\lambda$ and $\rho$);
+* `sim_npdf`, a nonparametric baseline (the user can implement $\Lambda_0^{-1}$).
+
+In the first case, equation \eqref{survtime} becomes:
+\begin{equation}
+T_{ij} = \left(\frac{-\log(U_{ij})}{w_k \cdot \lambda \exp\{\bX_{ij}^T \beta\}}\right)^{1/\rho}
+\end{equation}
+
+
+```{r simweibdata, fig.align='center', fig.height=4, fig.width=4}
+library( discfrail )
+#J is the total number of groups
+J <- 100
+#N is the number of units per group
+N <- 40
+#lambda: parameter of the Weibull distribution
+lambda <- 0.5
+#rho: parameter of the Weibull distribution
+rho <- 1.4
+#regression parameter
+beta <- c( 1.6, 0.4 )
+#vector of mixing proportion
+p <- c( 0.7, 0.3 )
+#vector of frailty values
+w_values <- c( 1.2, 2.1 )
+#percentage of censored events
+cens_perc <- 0.1
+
+set.seed(1200)
+data_weib <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_perc)
+
+head( data_weib )
+
+#family represents the group index
+table(data_weib$family)
+
+#status is the $\delta_{ij}
+table(data_weib$status)/sum(table(data_weib$status))
+
+#belong is the w
+table(data_weib$belong)/sum(table(data_weib$belong))
+```
+
+We can visualize the data_weib.  
+```{r visweibdata_weibcluster, fig.align='center', fig.height=4, fig.width=4}
+fit1 <- coxph( Surv( time, status ) ~ family, data_weib, method = 'breslow')
+sfit1 <- survfit(Surv( time, status ) ~ family, data_weib) 
+
+#setting the colors according to 'belong'
+lat_pop = rep( 2, J )
+lat_pop[ which( data_weib$belong[ seq( 1, dim(data_weib)[1], N ) ] %in%
+                  w_values[2]) ] = 1
+
+plot( sfit1, col = lat_pop, xlab = 'time', ylab = 'Survival probability',
+      lwd = 1.5 )
+legend( 'topright', paste('Latent population', 1:2), col = 2:1,
+        lty = rep(1,2), lwd = 1.5, bty = 'n' )
+```
+We note from the plot of the group-specific Survival probability functions that there is a great variability related to groups.
+
+We show an application of the second case:
+```{r npdatageneration, fig.align='center', fig.height=4, fig.width=4}
+J <- 100
+N <- 40
+Lambda_0_inv = function( t, c=0.01, d=4.6 ) ( t^( 1/d ) )/c
+beta <- 1.6
+p <- c( 0.8, 0.2 )
+w_values <- c( 0.8, 1.6 )
+cens_perc <- 0.2
+data_np <- sim_npdf( J, N, beta, Lambda_0_inv, p, w_values, cens_perc)
+head( data_np )
+
+#family represents the group index
+table(data_np$family)
+
+#status is the $\delta_{ij}
+table(data_np$status)/sum(table(data_np$status))
+
+#belong is the w
+table(data_np$belong)/sum(table(data_np$belong))
+```
+
+We can visualize the data_np.  
+```{r visnpdata_npdata_npcluster, fig.align='center', fig.height=4, fig.width=4}
+fit1 <- coxph( Surv( time, status ) ~ family, data_np, method = 'breslow')
+sfit1 <- survfit(Surv( time, status ) ~ family, data_np) 
+
+#setting the colors according to 'belong'
+lat_pop = rep( 2, J )
+lat_pop[ which( data_np$belong[ seq( 1, dim(data_np)[1], N ) ] %in%
+                  w_values[2]) ] = 1
+
+plot( sfit1, col = lat_pop, xlab = 'time', ylab = 'Survival probability',
+      lwd = 1.5 )
+legend( 'bottomleft', paste('Latent population', 1:2), col = 2:1,
+        lty = rep(1,2), lwd = 1.5, bty = 'n' )
+```
+
+# Cox model with a nonparametric discrete frailty
+
+In `npdf_cox` function, the method for estimating a Cox model with a nonparametric discrete frailty is implemented. See Section 3 of @gasperoni2018nonparam.
+
+We now apply `npdf_cox` on the previously mentioned `data_weib`, starting from $K=4$ latent popuations.
+```{r npdfcoxweib, fig.align='center', fig.height=4, fig.width=4}
+test_weib <- npdf_cox( Surv(time, status) ~ x.1 + x.2, groups = family,
+                       data = data_weib, K = 4, eps_conv=10^-4)
+test_weib    
+```
+According to AIC and BIC, the optimal $\hat{K}$ is equal to $2$, which is correct. Laird criterion [@laird1978nonparametric] states that the optimal $\hat{K}$ is $4$. The estimates $\hat{\boldsymbol{\pi}}$ are $[0.665,0.335]$, while the real ones are $[0.7,0.3]$. The estimated ratio $\hat{w_2}/\hat{w_1} = 1.747$, while the real one is $1.75$ ($2.1/1.2$). Exact standard errors and standard errors according to Louis method [@louis1982finding] are also reported (see Supplementary Material of Gasperoni et al.[-@gasperoni2018nonparam] for more detailed insights of the stanadrd errors computation). If `Fitted K` is different from the number of latent populations of the related iteration (i.e., `Fitted K: 3` and `K = 4`, means that there is a latent population to which no group is assigned), the standard errors are not computed. 
+
+We focus on the output of `npdf_cox`:
+
+* `npdf_cox$model` is a list composed by $4$ elements. The $i^{th}$ element of the list is composed by the estimates related to $K = i$ latent populations (we show the output related to $K=3$).  
+```{r modelnpdfcoxweib, fig.align='center', fig.height=4, fig.width=4}
+test_weib$model[[3]]
+```
+
+* `test_weib$comparison` is a matrix in which the values of log-likelihhod, AIC and BIC are reported for each value of $K$.
+```{r comparisonnpdfcoxweib, fig.align='center', fig.height=4, fig.width=4}
+test_weib$comparison
+```
+
+* `test_weib$Kopt` report the optimal $K$ according to Laird, AIC and BIC.
+```{r Koptnpdfcoxweib, fig.align='center', fig.height=4,fig.width=4}
+test_weib$Kopt
+```
+
+* `test_weib$criterion` is the creterion according to which the optimal $K$ is chosen. The default option is BIC, but the user can choose between AIC, BIC and Laird.
+```{r criterionnpdfcoxweib, fig.align='center', fig.height=4,fig.width=4}
+test_weib$criterion
+```
+
+* `test_weib$mf` is the representation of the dataset (we do not report it for the sake of space).
+
+Since the data are simulated, we are also able to check whether the groups are correctly assigned. We note that only $3$ groups are misclassified (1, 42 and 98).
+```{r miscnpdfcox, fig.align='center', fig.height=4, fig.width=4}
+#real_lat_pop: vector Jx1 of real latent populations index.
+real_lat_pop = rep( 1, length( unique( data_weib$family ) ) )
+
+w_values = sort( unique( data_weib$belong ) )
+
+#group indices in latent population 1
+ind_w_1 = data_weib$belong[seq(1, dim(data_weib)[1],
+                           length(which(data_weib$family == 1))) ] %in%
+                            w_values[ 1 ]
+#group indices in latent population 2
+ind_w_2 = data_weib$belong[seq(1, dim(data_weib)[1],
+                           length(which(data_weib$family == 1))) ] %in% 
+                            w_values[ 2 ]
+
+real_lat_pop[ ind_w_1 ] = 1
+real_lat_pop[ ind_w_2 ] = 2
+
+#match of estimated and real latent populations
+table( test_weib$models[[2]]$belonging, real_lat_pop )
+
+which( test_weib$models[[2]]$belonging != real_lat_pop )
+```
+
+We can investigate the posterior probabilities of being part of a specific latent population ($\alpha_{jk}$, see Section 3.1 of @gasperoni2018nonparam). It is possible to note that few groups are not definitely assigned to a specific latent population (i.e., group 1 is assigned to latent population 1 with a probability of 0.59 and is assigned to latent population 2 with a probability of 0.41).  It is also interesting to see that all the groups that are misclassified are part of the vector `assign_not_sure1`.
+```{r alphanpdfcox, fig.align='center', fig.height=4, fig.width=4}
+#alpha matrix: alpha_{jk} 
+#is the probability that group j is assigned to latent population k.
+#test_weib$models[[2]]$alpha
+
+assign_not_sure1 = which( test_weib$models[[2]]$alpha[ ,1 ] > 0.15 &
+                          test_weib$models[[2]]$alpha[ ,1 ] < 0.85 )
+
+assign_not_sure1
+```
+
+We can visualize the results through the `plot` function. It is also possible to plot Nelson-Aalen estimates (choosing `type = 'na'`).
+```{r plotnpdfcox, fig.align='center', fig.height=4, fig.width=4}
+#Kaplan-Meyer estimate
+plot( test_weib, type = 'km', lwd = 1.5  ) 
+legend( 'topright', paste( 'Latent population', c( 1, 2 ) ), lwd = 1.5,
+        col = c( 2, 1 ), lty = rep( 1, 2 ), bty = 'n' )
+```
+
+We can highlight those groups that are misclassified in the plot. The lines in green are the one estimated for misclassified groups.
+```{r plotmiscnpdfcox, fig.align='center', fig.height=4, fig.width=4}
+#Kaplan-Meyer estimate
+colors_misc = test_weib$models[[2]]$belonging + 1
+#higher frailty -> black
+colors_misc[ which( colors_misc == 3 ) ] = 1 
+#misclassified group -> green
+colors_misc[ which( test_weib$models[[2]]$belonging != real_lat_pop ) ] = 3 
+plot( test_weib, type = 'km', col = colors_misc, lwd = 1.5  ) 
+legend( 'topright', paste( 'Latent population', c( 1, 2 ) ), lwd = 1.5,
+        col = c( 2, 1 ), lty = rep( 1, 2 ), bty = 'n' )
+```
+
+# References
