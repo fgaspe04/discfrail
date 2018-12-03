@@ -63,13 +63,13 @@
 #'
 #' If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.
 #'
-#'\code{comparison} is a matrix composed by \code{K} rows and 5 columns (\code{K}, \code{K_fitted}, \code{llik}, \code{AIC}, \code{BIC}). \code{K_fitted} is the number of estimated latent populations, which can be equal or less than \code{K}. \code{llik} stands for log-likelihood, \code{AIC} for Akaike Information Criterion and \code{BIC} for Bayesian Information Criterion.
+#'\code{comparison} is a matrix composed of \code{K} rows and 5 columns (\code{K}, \code{K_fitted}, \code{llik}, \code{AIC}, \code{BIC}). \code{K_fitted} is the number of estimated latent populations, which can be equal to or less than \code{K}. \code{llik} stands for log-likelihood, \code{AIC} for Akaike Information Criterion and \code{BIC} for Bayesian Information Criterion.
 #'
 #'\code{Kopt} is optimal model under each criterion.
 #'
 #'\code{criterion} is the preferred criterion.
 #'
-#' In either case the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
+#' In either case, the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
 #'
 #'
 #' @references

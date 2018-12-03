@@ -24,7 +24,9 @@ print.npdf <- function(x, digits = NULL, ...){
         if (!is.null(x$seExact)) res$seExact <- seExact
         if (!is.null(x$seNumeric)) res$seNumeric <- seNumeric
         if( K!=1 ){
-          rownames( res )[1:(2*K-1)] =  c(paste("p",1:K, sep=""), paste( paste("w",2:K, sep=""),"/", rep("w1",(K-1)), sep="" ))
+            rownames( res )[1:(2*K-1)] =  c(paste("p",1:K, sep=""),
+                                            paste( paste("w",2:K, sep=""),"/",
+                                                  rep("w1",(K-1)), sep="" ))
         }
         fitstr <- sprintf("Log-likelihood %s, AIC %s, BIC %s", llik, BIC, AIC)
         print(res, digits=digits)
