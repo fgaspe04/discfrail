@@ -35,17 +35,18 @@
 #'
 #' @param K initial number of latent populations, or clusters of groups which have the same discrete frailty.
 #'
-#' @param estK If \code{TRUE} (the default) then multiple models are fitted with number of latent groups ranging from 1 to \code{K}.  The "best fitting" model according to the criterion specified in \code{criterion} is then highlighted when printing the object returned by this function.
+#' @param estK If \code{TRUE} (the default) then
+#' multiple models are fitted with number of latent groups ranging from 1 to \code{K}.  The "best fitting" model according to the criterion specified in \code{criterion} is then highlighted when printing the object returned by this function.
 #'
 #' If \code{FALSE} then the number of latent populations is fixed at \code{K}.
 #'
 #' @param criterion Criterion used to choose the best-fitting model to highlight when \code{estK} is \code{TRUE}.
 #'
-#' \code{"Laird"} for the Laird criterion (the default). Running from K latent populations to 1 latent population, this criterium selects the maximum number of latent populations that are non empty as the best K.
+#' \code{"Laird"} for the Laird criterion. Running from K latent populations to 1 latent population, this criterion selects the maximum number of latent populations that are non empty as the best K.
 #'
-#' \code{"AIC"} for Akaike's information criterion (TODO REF)
+#' \code{"AIC"} for Akaike's information criterion
 #'
-#' \code{"BIC"} for the Bayesian information criterion (TODO REF)
+#' \code{"BIC"} for the Bayesian information criterion (the default)
 #'
 #' @param eps_conv convergence tolerance for the EM algorithm
 #'

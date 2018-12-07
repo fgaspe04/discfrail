@@ -29,7 +29,7 @@
 #'
 #' @param w_values vector of K distinct frailty values, one for each latent population.
 #'
-#' @param cens_perc percentage of censored events
+#' @param cens_prop proportion of censored events
 #'
 #' @return A data frame with one row for each simulated individual, and the following columns:
 #'
@@ -53,12 +53,12 @@
 #' beta <- 1.6
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' cens_perc <- 0.1
-#' data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_perc )
+#' cens_prop <- 0.1
+#' data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_prop )
 #' head( data )
 
 
-sim_npdf <- function( J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_perc )
+sim_npdf <- function( J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_prop )
 {
   # if N is JULL, we sample the clusters' size from a Poisson with mean = 50
   if( is.null(N) )
@@ -106,9 +106,9 @@ sim_npdf <- function( J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_perc )
   Tlat <- Lambda_0_inv(- log(v) / ( w_tot * exp(x %*% beta) ) )
 
   # fixing parameters for the censoring distribution
-  if( cens_perc != 0 ){
-    mean_cens = quantile( Tlat, 1 - cens_perc ) #mean(Tlat)
-    var_cens = sd( Tlat[ ( ( 1 - cens_perc )*length( Tlat ) ):length( Tlat ) ] )/sqrt( length( Tlat ) ) #mean(Tlat)/10
+  if( cens_prop != 0 ){
+    mean_cens = quantile( Tlat, 1 - cens_prop ) #mean(Tlat)
+    var_cens = sd( Tlat[ ( ( 1 - cens_prop )*length( Tlat ) ):length( Tlat ) ] )/sqrt( length( Tlat ) ) #mean(Tlat)/10
     # computing censoring times
     C = rnorm( n, mean_cens, var_cens)
   }else{
