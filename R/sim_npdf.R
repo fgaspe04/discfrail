@@ -55,12 +55,12 @@
 #' beta <- 1.6
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' cens_perc <- 0.1
-#' data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_perc )
+#' cens_prop <- 0.1
+#' data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_prop )
 #' head( data )
 
 
-sim_npdf <- function( J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_perc )
+sim_npdf <- function( J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_prop )
 {
   # if N is JULL, we sample the clusters' size from a Poisson with mean = 50
   if( is.null(N) )

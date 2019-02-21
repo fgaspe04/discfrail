@@ -48,12 +48,12 @@
 #' rho <- 1
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
-#' cens_perc <- 0.2
-#' data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_perc)
+#' cens_prop <- 0.2
+#' data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_prop)
 #' head( data )
 #'
 
-sim_weibdf <- function( J, N = NULL, lambda, rho, beta, p, w_values, cens_perc )
+sim_weibdf <- function( J, N = NULL, lambda, rho, beta, p, w_values, cens_prop )
 {
   # if N is NULL, we sample the clusters' size from a Poisson with mean = 50
   if( is.null(N) ){
