@@ -73,7 +73,7 @@
 #'
 #'
 #' @references
-#' Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
+#' Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. (2018). Nonparametric frailty Cox models for hierarchical time-to-event data. \emph{Biostatistics}.
 #' Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
 #' Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
 #'

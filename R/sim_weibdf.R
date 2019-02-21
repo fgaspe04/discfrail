@@ -29,11 +29,14 @@
 #'
 #' @param w_values vector of K distinct frailty values, one for each latent population.
 #'
-#' @param cens_perc percentage of censored events
+#' @param cens_perc cens_perc percentage of censored events. Censoring times are assumed to be distributed as a Normal with variance equal to 1.
 #'
 #' @inherit sim_npdf return
 #'
 #' @details The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
+#'
+#' @references
+#' Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.
 #'
 #' @export
 #'
@@ -98,19 +101,25 @@ sim_weibdf <- function( J, N = NULL, lambda, rho, beta, p, w_values, cens_perc )
   v <- runif( n )
   Tlat <- (- log(v) / (lambda * w_tot * exp(x %*% beta) ) )^(1 / rho)
 
-  # fixing parameters for the censoring distribution
-  if( cens_perc != 0 ){
-    mean_cens = quantile( Tlat, 1 - cens_perc ) #mean(Tlat)
-    var_cens = sd( Tlat[ ( ( 1 - cens_perc )*length( Tlat ) ):length( Tlat ) ] )/sqrt( length( Tlat ) ) #mean(Tlat)/10
-    # computing censoring times
-    C = rnorm( n, mean_cens, var_cens)
-  }else{
-    C = rep( max(Tlat) + 1, n )
-  }
+  # check cens_perc
+  stopifnot(0 <= cens_perc && cens_perc <= 1)
+
+  #
+  esurv = ecdf(Tlat)
+  efail = function(t) 1 - esurv(t)
+  censor.mu = uniroot(function(mu)
+    cens_perc -
+      (integrate(function(t) efail(t)*dnorm(t, mu, 1),
+                 -Inf, qnorm(0.5, mu, 1), subdivisions=2000 )$value +
+         integrate(function(t) efail(t)*dnorm(t, mu, 1),
+                   qnorm(0.5, mu, 1), Inf, subdivisions=2000 )$value),
+    lower=0, upper=100, extendInt="up")$root
+
+  Censor = rnorm( n, censor.mu, 1)
 
   # follow-up times and event indicators
-  time <- pmin( Tlat, C )
-  status <- as.numeric( Tlat <= C )
+  time <- pmin( Tlat, Censor )
+  status <- as.numeric( Tlat <= Censor )
 
   # data set
   data.frame(family=rep( 1:J, coef ),
