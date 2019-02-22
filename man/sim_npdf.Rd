@@ -4,7 +4,7 @@
 \alias{sim_npdf}
 \title{Simulation of grouped time-to-event data with nonparametric baseline hazard and discrete shared frailty distribution}
 \usage{
-sim_npdf(J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_perc)
+sim_npdf(J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_prop)
 }
 \arguments{
 \item{J}{number of groups in the data}
@@ -19,7 +19,7 @@ sim_npdf(J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_perc)
 
 \item{w_values}{vector of K distinct frailty values, one for each latent population.}
 
-\item{cens_perc}{percentage of censored events}
+\item{cens_perc}{percentage of censored events. Censoring times are assumed to be distributed as a Normal with variance equal to 1.}
 }
 \value{
 A data frame with one row for each simulated individual, and the following columns:
@@ -44,7 +44,10 @@ Lambda_0_inv = function( t, c=0.01, d=4.6 ) ( t^( 1/d ) )/c
 beta <- 1.6
 p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
-cens_perc <- 0.1
-data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_perc )
+cens_prop <- 0.1
+data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_prop )
 head( data )
+}
+\references{
+Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.
 }

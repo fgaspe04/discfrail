@@ -27,17 +27,18 @@ environment.}
 
 \item{K}{initial number of latent populations, or clusters of groups which have the same discrete frailty.}
 
-\item{estK}{If \code{TRUE} (the default) then multiple models are fitted with number of latent groups ranging from 1 to \code{K}.  The "best fitting" model according to the criterion specified in \code{criterion} is then highlighted when printing the object returned by this function.
+\item{estK}{If \code{TRUE} (the default) then
+multiple models are fitted with number of latent groups ranging from 1 to \code{K}.  The "best fitting" model according to the criterion specified in \code{criterion} is then highlighted when printing the object returned by this function.
 
 If \code{FALSE} then the number of latent populations is fixed at \code{K}.}
 
 \item{criterion}{Criterion used to choose the best-fitting model to highlight when \code{estK} is \code{TRUE}.
 
-\code{"Laird"} for the Laird criterion (the default). Running from K latent populations to 1 latent population, this criterium selects the maximum number of latent populations that are non empty as the best K.
+\code{"Laird"} for the Laird criterion. Running from K latent populations to 1 latent population, this criterion selects the maximum number of latent populations that are non empty as the best K.
 
-\code{"AIC"} for Akaike's information criterion (TODO REF)
+\code{"AIC"} for Akaike's information criterion
 
-\code{"BIC"} for the Bayesian information criterion (TODO REF)}
+\code{"BIC"} for the Bayesian information criterion (the default)}
 
 \item{eps_conv}{convergence tolerance for the EM algorithm}
 
@@ -56,13 +57,13 @@ If \code{estK=FALSE} this returns a list of class \code{npdf} which includes inf
 
 If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an element \code{models} that contains a list of length \code{K}, with one component of class \code{npdf} for each fitted model.
 
-\code{comparison} is a matrix composed by \code{K} rows and 5 columns (\code{K}, \code{K_fitted}, \code{llik}, \code{AIC}, \code{BIC}). \code{K_fitted} is the number of estimated latent populations, which can be equal or less than \code{K}. \code{llik} stands for log-likelihood, \code{AIC} for Akaike Information Criterion and \code{BIC} for Bayesian Information Criterion.
+\code{comparison} is a matrix composed of \code{K} rows and 5 columns (\code{K}, \code{K_fitted}, \code{llik}, \code{AIC}, \code{BIC}). \code{K_fitted} is the number of estimated latent populations, which can be equal to or less than \code{K}. \code{llik} stands for log-likelihood, \code{AIC} for Akaike Information Criterion and \code{BIC} for Bayesian Information Criterion.
 
 \code{Kopt} is optimal model under each criterion.
 
 \code{criterion} is the preferred criterion.
 
-In either case the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
+In either case, the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
 }
 \description{
 This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
@@ -74,7 +75,7 @@ test$models[[1]] # examine alternative model with 1 latent population
 
 }
 \references{
-Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. "Nonparametric frailty Cox models for hierarchical time-to-event data".
+Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. (2018). Nonparametric frailty Cox models for hierarchical time-to-event data. \emph{Biostatistics}.
 Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
 Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
 }

@@ -4,7 +4,7 @@
 \alias{sim_weibdf}
 \title{Simulation of grouped time-to-event data with Weibull baseline hazard and discrete shared frailty distribution}
 \usage{
-sim_weibdf(J, N = NULL, lambda, rho, beta, p, w_values, cens_perc)
+sim_weibdf(J, N = NULL, lambda, rho, beta, p, w_values, cens_prop)
 }
 \arguments{
 \item{J}{number of groups in the data}
@@ -21,7 +21,7 @@ sim_weibdf(J, N = NULL, lambda, rho, beta, p, w_values, cens_perc)
 
 \item{w_values}{vector of K distinct frailty values, one for each latent population.}
 
-\item{cens_perc}{percentage of censored events}
+\item{cens_perc}{cens_perc percentage of censored events. Censoring times are assumed to be distributed as a Normal with variance equal to 1.}
 }
 \value{
 A data frame with one row for each simulated individual, and the following columns:
@@ -50,8 +50,11 @@ beta <- 1.6
 rho <- 1
 p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
-cens_perc <- 0.2
-data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_perc)
+cens_prop <- 0.2
+data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_prop)
 head( data )
 
+}
+\references{
+Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.
 }

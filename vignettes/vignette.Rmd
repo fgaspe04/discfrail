@@ -51,7 +51,7 @@ The vector $\mathbf{z}_{j}$ has a multinomial distribution. Note that there are 
 
 We assume that censoring is noninformative, thus that $T_{ij}^*$ and $C_{ij}$ are conditionally independent, given $\bX_{ij}$, $w_k$ and $z_{jk}$.
 
-In Section 5 of @gasperoni2018nonparam , this model is used with an outcome of the time until readmission to hospital for patients with heart failure that are grouped by their healthcare providers. 
+An application of this model to a real dataset is shown in Section 5 of @gasperoni2018nonparam. In this case, the event of interest is the second admission in hospital of patients that suffer from Heart Failure (patients are grouped in healthcare providers). 
 
 
 # Simulation of hierarchical time-to-event data with a latent clustering structure of groups
@@ -66,7 +66,7 @@ The input parameters of the simulation algorithm are:
 * $\boldsymbol{\pi}$: the K-dimensional probability vector of belonging to a single population;
 * **w**: the K-dimensional frailty vector;
 * $\boldsymbol{\beta}$: the vector of regression parameters;
-* $p_{cens}$, the proportion of events which are censored.
+* $cens_{perc}$, the proportion of events which are censored.
 
 Several steps are needed for building the dataset. The simulation procedure uses the method presented by @bender2005generating. We use two probability results to obtain Eq.\eqref{invthm}: the inverse probability method and the fact that if a generic random variable V is distributed as $\mathcal{U}[0,1]$ then $1-V$ is still a $\mathcal{U}[0,1]$.
 
@@ -84,13 +84,13 @@ The main difference between equations \eqref{invthm}, \eqref{survtime} and the o
 
 The covariates are randomly generated from a normal distribution, $\bX_{ij} \overset{i.i.d.}{\sim} N(0,1)$.
 
-Exploiting equations \eqref{invthm} and \eqref{survtime} we are able to simulate the _event_ times $T_{ij}$. Then, we generate the _censoring_ times according to a Normal distribution, independently from the $T_{ij}$.   The mean of the distribution is taken to be the $1 - p_{cens}$ quantile of the simulated event times  [ TODO explain variance ] so that $p_{cens}$ of the simulated times are censored. 
+Exploiting equations \eqref{invthm} and \eqref{survtime} we are able to simulate the _event_ times $T_{ij}$. Then, we generate the _censoring_ times according to a Normal distribution with standard deviation equal to one, independently from the $T_{ij}$. The censoring scheme is reproduced according to @wan2017simulating so that $cens_{perc}$ of the simulated times are censored.
 
 Finally, we obtain the status variable as: $\delta_{ij} = \mathbf{1}_{(T_{ij}^* \leq C_{ij} )}$.
 
 The package includes two general choices of baseline survival function:
 
-* `sim_weibdf`, a parametric baseline, specifically a Weibull distribution characterised by two parameters $\lambda$ and $\rho$, with cumulative hazard function [ TODO write explicitly as function of the parameters ] 
+* `sim_weibdf`, a parametric baseline, specifically a Weibull distribution characterised by two parameters $\lambda$ and $\rho$, with cumulative hazard function $\Lambda_0(t) = \lambda \cdot t^{\rho}$.
 
 * `sim_npdf`, a generic baseline, where the user can supply $\Lambda_0^{-1}$ as an R function of time. 
 
@@ -183,7 +183,7 @@ legend( 'bottomleft', paste('Latent population', 1:2), col = 2:1,
 
 # Cox model with a nonparametric discrete frailty
 
-The function `npdf_cox` can be used to fit the Cox model with nonparametric discrete frailty.  This is based on maximum partial likelihood using an EM algorithm -- see Section 3 of @gasperoni2018nonparam.  We illustrate the use of this function to fit this model to the dataset `data_weib` that was simulated previously. 
+The function `npdf_cox` can be used to fit the Cox model with nonparametric discrete frailty.  This is based on maximum partial likelihood using an EM algorithm -- see Section 3 of @gasperoni2018nonparam.  We illustrate the use of this function to fit this model to the dataset `data_weib` that was previously simulated. 
 
 The first argument specifies the outcome as a `Surv` object, and any covariates, in the standard R formula syntax used by `coxph` in the standard `survival` package.    Another required argument is `groups`, which names a variable in the data containing the group membership indicators.
 
@@ -231,7 +231,7 @@ test_weib$criterion
 
 * `test_weib$mf` is the \emph{model frame}, the data frame used to fit the model.
 
-Since the data are simulated, we are also able to check whether the groups are correctly assigned. We note that only $3$ groups are misclassified (1, 42 and 98).
+Since the data are simulated, we are also able to check whether the groups are correctly assigned. We note that only $2$ groups are misclassified (42 and 98).
 
 ```{r miscnpdfcox}
 # true distinct frailty for each group
@@ -239,16 +239,20 @@ w <- data_weib$belong[!duplicated(data_weib$family)]
 # true latent population for each group
 real_lat_pop <- match(w, sort(unique(w)))            
 table( test_weib$models[[2]]$belonging, real_lat_pop )
-which( test_weib$models[[2]]$belonging != real_lat_pop )
+misc_ind = which( test_weib$models[[2]]$belonging != real_lat_pop )
+misc_ind
+test_weib$models[[2]]$alpha[ misc_ind, ]
 ```
 
-We can investigate the posterior probabilities of being part of a specific latent population ($\alpha_{jk}$, see Section 3.1 of @gasperoni2018nonparam).  For some groups there is great uncertainty about the latent population to which they belong (i.e., group 1 is assigned to latent population 1 and 2 with probabilities of 0.59, 0.41 respectively).    The following code identifies those groups for which no latent group has a posterior probability of more than 0.85 -- note that this includes the three "misclassified" groups highlighted above. 
+We can investigate the posterior probabilities of being part of a specific latent population ($\alpha_{jk}$, see Section 3.1 of @gasperoni2018nonparam).  For some groups there is great uncertainty about the latent population to which they belong (i.e., group 98 is assigned to latent population 1 and 2 with probabilities of 0.66, 0.34 respectively).    The following code identifies those groups that have probabilities between 0.05 and 0.95 of being assigned to latent population one and two (note that this list includes the two "misclassified" groups highlighted above). 
 ```{r alphanpdfcox, fig.align='center', fig.height=4, fig.width=4}
 #alpha matrix: alpha_{jk} 
 #is the probability that group j is assigned to latent population k.
 #test_weib$models[[2]]$alpha
-assign_not_sure1 = which( test_weib$models[[2]]$alpha[ ,1 ] < 0.85 &
-                          test_weib$models[[2]]$alpha[ ,2 ] < 0.85 )
+assign_not_sure1 = which( test_weib$models[[2]]$alpha[ ,1 ] < 0.95 &
+                            test_weib$models[[2]]$alpha[ ,1 ] > 0.05 &
+                            test_weib$models[[2]]$alpha[ ,2 ] < 0.95 &
+                            test_weib$models[[2]]$alpha[ ,2 ] > 0.05 ) 
 assign_not_sure1
 ```
 
