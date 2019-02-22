@@ -4,7 +4,7 @@
 \alias{sim_weibdf}
 \title{Simulation of grouped time-to-event data with Weibull baseline hazard and discrete shared frailty distribution}
 \usage{
-sim_weibdf(J, N = NULL, lambda, rho, beta, p, w_values, cens_prop)
+sim_weibdf(J, N = NULL, lambda, rho, beta, p, w_values, cens_perc)
 }
 \arguments{
 \item{J}{number of groups in the data}
@@ -50,8 +50,8 @@ beta <- 1.6
 rho <- 1
 p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
-cens_prop <- 0.2
-data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_prop)
+cens_perc <- 0.2
+data <- sim_weibdf( J, N, lambda, rho, beta, p, w_values, cens_perc)
 head( data )
 
 }

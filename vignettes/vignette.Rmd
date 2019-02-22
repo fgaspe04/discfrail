@@ -17,7 +17,7 @@ csl: acm.csl
 vignette: >
   %\VignetteIndexEntry{discfrail}
   %\VignetteEngine{knitr::rmarkdown_notangle} 
-  %\VignetteEncoding{UTF-8}
+  %\VignetteEncoding[UTF-8]{inputenc}
 ---
 \fontsize{12}{22}
 \selectfont

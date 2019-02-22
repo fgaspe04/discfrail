@@ -46,6 +46,8 @@
 #' @references
 #' Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.
 #'
+#' @importFrom stats dnorm qnorm ecdf integrate uniroot
+#'
 #' @export
 #'
 #' @examples
@@ -56,13 +58,13 @@
 #' p <- c( 0.8, 0.2 )
 #' w_values <- c( 0.8, 1.6 )
 #' cens_perc <- 0.1
-#' data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_perc )
+#' data <- sim_npdf( J, N, beta, Lambda_0_inv, p, w_values, cens_perc )
 #' head( data )
 
 
-sim_npdf <- function( J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_perc )
+sim_npdf <- function( J, N = NULL, beta, Lambda_0_inv, p, w_values, cens_perc )
 {
-  # if N is JULL, we sample the clusters' size from a Poisson with mean = 50
+  # if N is NULL, we sample the clusters' size from a Poisson with mean = 50
   if( is.null(N) )
     N <- rpois( J, 50  )
 

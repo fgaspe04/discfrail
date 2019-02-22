@@ -4,7 +4,7 @@
 \alias{sim_npdf}
 \title{Simulation of grouped time-to-event data with nonparametric baseline hazard and discrete shared frailty distribution}
 \usage{
-sim_npdf(J, N = JULL, beta, Lambda_0_inv, p, w_values, cens_prop)
+sim_npdf(J, N = NULL, beta, Lambda_0_inv, p, w_values, cens_perc)
 }
 \arguments{
 \item{J}{number of groups in the data}
@@ -44,8 +44,8 @@ Lambda_0_inv = function( t, c=0.01, d=4.6 ) ( t^( 1/d ) )/c
 beta <- 1.6
 p <- c( 0.8, 0.2 )
 w_values <- c( 0.8, 1.6 )
-cens_prop <- 0.1
-data <- sim_npdf( N, S, beta, Lambda_0_inv, p, w_values, cens_prop )
+cens_perc <- 0.1
+data <- sim_npdf( J, N, beta, Lambda_0_inv, p, w_values, cens_perc )
 head( data )
 }
 \references{

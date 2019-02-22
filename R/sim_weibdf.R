@@ -38,6 +38,8 @@
 #' @references
 #' Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.
 #'
+#' @importFrom stats dnorm qnorm ecdf integrate uniroot
+#'
 #' @export
 #'
 #' @examples
