@@ -35,13 +35,13 @@
 #'
 #' \code{family}: the group which the individual is in (integers 1, 2, ...)
 #'
-#' \code{time}: the simulated event time
+#' \code{time}: the simulated event time.
 #'
-#' \code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
+#' \code{status}: the simulated survival status. Censoring times are generated from a Normal distribution with standard deviation equal to 1 and the mean is estimated in order to guarantee the determined percentage of censored events. The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
 #'
 #' \code{x}: matrix of covariate values, generated from a standard normal distribution.
 #'
-#' \code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated.
+#' \code{belong}:  the frailty hazard ratio corresponding to the cluster of groups in which the individual's group has been allocated.
 #'
 #' @references
 #' Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.

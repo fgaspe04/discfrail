@@ -33,7 +33,7 @@
 #'
 #' @inherit sim_npdf return
 #'
-#' @details The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
+#' @details The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-\lambda t^{\rho} w exp(x^T {\beta}) )}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
 #'
 #' @references
 #' Wan, F. (2017). Simulating survival data with predefined censoring rates for proportional hazards models. \emph{Statistics in medicine}, 36(5), 838-854.

@@ -1,10 +1,10 @@
 Package: discfrail
-Title: Cox models for time-to-event data with nonparametric discrete group-specific frailties
-Version: 0.0.0.9000
+Title: Cox Models for Time-to-Event Data with Nonparametric Discrete Group-Specific Frailties
+Version: 0.1
 Authors@R: c( person("Francesca", "Gasperoni", email = "francesca.gasperoni@polimi.it", role = c( "aut", "cre" ) ),
               person("Christopher", "Jackson", email = "chris.jackson@mrc-bsu.cam.ac.uk", role = c( "aut") ) )
-Description: Functions for fitting Cox proportional hazards models for grouped time-to-event data, where the shared group-specific frailties have a discrete nonparametric distribution.  There are also functions for simulating from these models, and from similar models with a parametric baseline survival function. 
-Depends: R (>= 3.3.2), survival
+Description: Functions for fitting Cox proportional hazards models for grouped time-to-event data, where the shared group-specific frailties have a discrete nonparametric distribution. There are also functions for simulating from these models, and from similar models with a parametric baseline survival function. 
+Depends: R (>= 3.3.0), survival
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

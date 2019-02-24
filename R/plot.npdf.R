@@ -19,16 +19,16 @@
 ##' result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
 ##'                     K = 2, estK = FALSE, eps_conv=10^-4)
 ##' plot( result )
-##' plot( result, type="km" )
-##' plot(result, cols=ifelse(result$belonging==1, "purple", "black"), xlim=c(0, 150))
+##' plot( result, type = "km" )
+##' plot( result, cols = ifelse( result$belonging == 1, "purple", "black" ), xlim = c( 0, 150 ) )
 ##'
 ##' ## use of survfit_opts.  show only first 10 groups
-##' plot(result, survfit_opts = list(subset = (weibdata20$family >= 10) ))
+##' plot( result, survfit_opts = list(subset = (weibdata20$family >= 10) ))
 ##'
-##' plot(result, type="na" )
+##' plot( result, type = "na" )
 ##'
 ##' ## use of na_opts to customise the Nelson-Aalen plot
-##' plot(result, type="na", cols=ifelse(result$belonging==2, "purple", "black"),
+##' plot( result, type = "na", cols=ifelse(result$belonging==2, "purple", "black"),
 ##'      na_opts = list(xlim=c(0,200), ylim=c(0,2),
 ##'                     xlab="Follow-up days",
 ##'                     ylab="Nelson-Aalen estimate"))
@@ -67,9 +67,9 @@ plot.npdf <- function(x, type="km", cols=NULL, survfit_opts = NULL, na_opts = NU
 ##' @examples
 ##' result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
 ##'                    K = 2, eps_conv=10^-4)
-##' plot(result, K=2)
-##' plot(result, type="na")
-##' plot(result, type="na", cols=ifelse(result$belonging==2, "purple", "black"),
+##' plot( result, K = 2 )
+##' plot( result, type = "na" )
+##' plot( result, type = "na", cols=ifelse(result$belonging==2, "purple", "black"),
 ##'      na_opts = list(xlim=c(0,200), ylim=c(0,2),
 ##'                     xlab="Follow-up days",
 ##'                     ylab="Nelson-Aalen estimate"))
@@ -91,16 +91,16 @@ plot.npdflist <- function(x, K=NULL, ...){
 ##'
 ##' @return A list of objects of length equal to the number of groups in the data.  Each component is a list, equivalent to the output of \code{\link{survfit}} called for the corresponding group with \code{type="fh"}, but with two additional components:
 ##'
-##' \code{y0}:  -\code{-log} of the survival estimate
+##' \code{y0}:  \code{-log} of the survival estimate
 ##'
 ##' \code{sfun0}:  a step function for \code{y0} in terms of time, estimated using \code{\link{stepfun}}.
 ##'
 ##' @seealso \code{\link{plot.nelsonaalen_npdf}}, \code{\link{plot.npdf}}.
 ##'
 ##' @examples
-##' x <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+##' x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
 ##'                estK=FALSE, eps_conv=10^-4)
-##' object <- nelsonaalen_npdf(x)
+##' object = nelsonaalen_npdf( x )
 ##'
 ##' @export
 nelsonaalen_npdf <- function(x){
@@ -139,11 +139,11 @@ nelsonaalen_npdf <- function(x){
 ##'
 ##' @examples
 ##'
-##'  x <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+##'  x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
 ##'                 estK=FALSE, eps_conv=10^-4)
-##' object <- nelsonaalen_npdf(x)
-##' plot(object)
-##' plot(object, xlim=c(0,200), ylim=c(0,2),
+##' object = nelsonaalen_npdf( x )
+##' plot( object )
+##' plot( object, xlim=c(0,200), ylim=c(0,2),
 ##'      xlab="Follow-up days", ylab="Nelson-Aalen estimate",
 ##'      cols=ifelse(x$belonging==2, "purple", "black"))
 ##'
@@ -193,10 +193,10 @@ survfit_npdf <- function(x, survfit_opts = NULL){
 ##' @seealso \code{\link{plot.npdf}}, \code{\link{survfit_npdf}}
 ##'
 ##' @examples
-##'  x <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+##'  x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
 ##'                 estK=FALSE, eps_conv=10^-4)
-##' object <- survfit_npdf(x)
-##' plot(object)
+##' object = survfit_npdf( x )
+##' plot( object )
 ##'
 ##' @importFrom utils getFromNamespace
 ##'

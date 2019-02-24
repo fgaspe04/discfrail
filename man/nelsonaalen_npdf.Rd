@@ -12,7 +12,7 @@ nelsonaalen_npdf(x)
 \value{
 A list of objects of length equal to the number of groups in the data.  Each component is a list, equivalent to the output of \code{\link{survfit}} called for the corresponding group with \code{type="fh"}, but with two additional components:
 
-\code{y0}:  -\code{-log} of the survival estimate
+\code{y0}:  \code{-log} of the survival estimate
 
 \code{sfun0}:  a step function for \code{y0} in terms of time, estimated using \code{\link{stepfun}}.
 }
@@ -20,9 +20,9 @@ A list of objects of length equal to the number of groups in the data.  Each com
 Nelson-Aalen estimates of group-specific cumulative hazard from a nonparametric discrete frailty model
 }
 \examples{
-x <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
                estK=FALSE, eps_conv=10^-4)
-object <- nelsonaalen_npdf(x)
+object = nelsonaalen_npdf( x )
 
 }
 \seealso{

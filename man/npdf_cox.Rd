@@ -2,7 +2,7 @@
 % Please edit documentation in R/npdf.R
 \name{npdf_cox}
 \alias{npdf_cox}
-\title{Cox model for grouped survival data with discrete shared frailties}
+\title{Cox model for grouped survival data with nonparametric discrete shared frailties}
 \usage{
 npdf_cox(formula, groups, data, K = 2, estK = TRUE,
   criterion = "BIC", eps_conv = 10^-4, se_method = c("louis",
@@ -36,11 +36,11 @@ If \code{FALSE} then the number of latent populations is fixed at \code{K}.}
 
 \code{"Laird"} for the Laird criterion. Running from K latent populations to 1 latent population, this criterion selects the maximum number of latent populations that are non empty as the best K.
 
-\code{"AIC"} for Akaike's information criterion
+\code{"AIC"} for Akaike's information criterion.
 
-\code{"BIC"} for the Bayesian information criterion (the default)}
+\code{"BIC"} for the Bayesian information criterion (the default).}
 
-\item{eps_conv}{convergence tolerance for the EM algorithm}
+\item{eps_conv}{convergence tolerance for the EM algorithm.}
 
 \item{se_method}{Method or methods used to compute the standard errors.  A character vector containing one or more of the following:
 
@@ -66,16 +66,18 @@ If \code{estK=TRUE} this returns a list of class \code{npdflist}.  This has an e
 In either case, the data frame used for the fit (the "model frame") is appended as a component \code{mf}.
 }
 \description{
-This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
+This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a nonparametric discrete distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
 }
 \examples{
-test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
+test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 4, eps_conv=10^-4)
 test    # optimal model (by all criteria) has 2 latent populations
 test$models[[1]] # examine alternative model with 1 latent population
 
 }
 \references{
 Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. (2018). Nonparametric frailty Cox models for hierarchical time-to-event data. \emph{Biostatistics}.
+
 Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
+
 Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
 }

@@ -28,19 +28,19 @@ A data frame with one row for each simulated individual, and the following colum
 
 \code{family}: the group which the individual is in (integers 1, 2, ...)
 
-\code{time}: the simulated event time
+\code{time}: the simulated event time.
 
-\code{status}: the simulated survival status.   Censoring times are generated from a normal distribution with mean given by the simulated event time, and variance given by the mean divided by 10.  The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
+\code{status}: the simulated survival status. Censoring times are generated from a Normal distribution with standard deviation equal to 1 and the mean is estimated in order to guarantee the determined percentage of censored events. The event time is observed (status=1) if it is less than the censoring time, and censored otherwise (status=0).
 
 \code{x}: matrix of covariate values, generated from a standard normal distribution.
 
-\code{belong}:  the frailty hazard ratio corresponding to the the cluster of groups in which the individual's group has been allocated.
+\code{belong}:  the frailty hazard ratio corresponding to the cluster of groups in which the individual's group has been allocated.
 }
 \description{
 This function returns a dataset generated from a Weibull proportional hazards model with a shared discrete frailty term, for given Weibull parameters, hazard ratios, distribution of groups among latent populations, frailty values for each latent population, and randomly-generated covariate values.
 }
 \details{
-The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-lambda w exp(x^T beta) t^rho)}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
+The "proportional hazards" parameterisation of the Weibull distribution is used, with survivor function \eqn{S(t) = exp(-\lambda t^{\rho} w exp(x^T {\beta}) )}. Note this is different from the "accelerated failure time" parameterisation used in, e.g. \code{\link{dweibull}}.  Distribution functions for the proportional hazards parameterisation can be found in the \pkg{flexsurv} package.
 }
 \examples{
 J <- 100

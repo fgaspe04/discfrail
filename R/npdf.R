@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' Cox model for grouped survival data with discrete shared frailties
+#' Cox model for grouped survival data with nonparametric discrete shared frailties
 #'
-#' This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a discrete (nonparametric) distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
+#' This function fits a Cox proportional hazards model to grouped survival data, where the shared group-specific frailties have a nonparametric discrete distribution.  An EM algorithm is used to maximise the marginal partial likelihood.
 #'
 #' @param formula A formula expression in conventional R linear modelling
 #' syntax. The response must be a survival time constructed by the
@@ -44,11 +44,11 @@
 #'
 #' \code{"Laird"} for the Laird criterion. Running from K latent populations to 1 latent population, this criterion selects the maximum number of latent populations that are non empty as the best K.
 #'
-#' \code{"AIC"} for Akaike's information criterion
+#' \code{"AIC"} for Akaike's information criterion.
 #'
-#' \code{"BIC"} for the Bayesian information criterion (the default)
+#' \code{"BIC"} for the Bayesian information criterion (the default).
 #'
-#' @param eps_conv convergence tolerance for the EM algorithm
+#' @param eps_conv convergence tolerance for the EM algorithm.
 #'
 #' @param se_method Method or methods used to compute the standard errors.  A character vector containing one or more of the following:
 #'
@@ -75,7 +75,9 @@
 #'
 #' @references
 #' Gasperoni, F., Ieva, F., Paganoni, A.M., Jackson, C. and Sharples, L. (2018). Nonparametric frailty Cox models for hierarchical time-to-event data. \emph{Biostatistics}.
+#'
 #' Laird, N. (1978). Nonparametric maximum likelihood estimation of a mixing distribution. \emph{Journal of the American Statistical Association}, 73(364), 805–811.
+#'
 #' Louis, T. A. (1982). Finding the observed information matrix when using the EM algorithm. \emph{Journal of the Royal Statistical Society. Series B}, 44(2), 226–233.
 #'
 #' @import survival
@@ -87,7 +89,7 @@
 #' @export
 #'
 #' @examples
-#' test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata, K = 4, eps_conv=10^-4)
+#' test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 4, eps_conv=10^-4)
 #' test    # optimal model (by all criteria) has 2 latent populations
 #' test$models[[1]] # examine alternative model with 1 latent population
 #'
