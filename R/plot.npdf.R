@@ -16,14 +16,14 @@
 ##'
 ##' @examples
 ##'
-##' result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
+##' result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata2030,
 ##'                     K = 2, estK = FALSE, eps_conv=10^-4)
 ##' plot( result )
 ##' plot( result, type = "km" )
 ##' plot( result, cols = ifelse( result$belonging == 1, "purple", "black" ), xlim = c( 0, 150 ) )
 ##'
 ##' ## use of survfit_opts.  show only first 10 groups
-##' plot( result, survfit_opts = list(subset = (weibdata20$family >= 10) ))
+##' plot( result, survfit_opts = list(subset = (weibdata2030$family >= 10) ))
 ##'
 ##' plot( result, type = "na" )
 ##'
@@ -65,7 +65,7 @@ plot.npdf <- function(x, type="km", cols=NULL, survfit_opts = NULL, na_opts = NU
 ##' @param ... Options to customise the plot, passed to \code{\link{plot.npdf}}.  See \code{\link{plot.npdf}} for a description of these.
 ##'
 ##' @examples
-##' result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
+##' result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata2030,
 ##'                    K = 2, eps_conv=10^-4)
 ##' plot( result, K = 2 )
 ##' plot( result, type = "na" )
@@ -98,7 +98,7 @@ plot.npdflist <- function(x, K=NULL, ...){
 ##' @seealso \code{\link{plot.nelsonaalen_npdf}}, \code{\link{plot.npdf}}.
 ##'
 ##' @examples
-##' x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+##' x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata2030, K = 2,
 ##'                estK=FALSE, eps_conv=10^-4)
 ##' object = nelsonaalen_npdf( x )
 ##'
@@ -139,7 +139,7 @@ nelsonaalen_npdf <- function(x){
 ##'
 ##' @examples
 ##'
-##'  x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+##'  x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata2030, K = 2,
 ##'                 estK=FALSE, eps_conv=10^-4)
 ##' object = nelsonaalen_npdf( x )
 ##' plot( object )
@@ -193,7 +193,7 @@ survfit_npdf <- function(x, survfit_opts = NULL){
 ##' @seealso \code{\link{plot.npdf}}, \code{\link{survfit_npdf}}
 ##'
 ##' @examples
-##'  x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 2,
+##'  x = npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata2030, K = 2,
 ##'                 estK=FALSE, eps_conv=10^-4)
 ##' object = survfit_npdf( x )
 ##' plot( object )

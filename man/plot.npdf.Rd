@@ -25,14 +25,14 @@ This function plots estimates of the survival or cumulative hazard for each grou
 }
 \examples{
 
-result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
+result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata2030,
                     K = 2, estK = FALSE, eps_conv=10^-4)
 plot( result )
 plot( result, type = "km" )
 plot( result, cols = ifelse( result$belonging == 1, "purple", "black" ), xlim = c( 0, 150 ) )
 
 ## use of survfit_opts.  show only first 10 groups
-plot( result, survfit_opts = list(subset = (weibdata20$family >= 10) ))
+plot( result, survfit_opts = list(subset = (weibdata2030$family >= 10) ))
 
 plot( result, type = "na" )
 

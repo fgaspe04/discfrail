@@ -17,7 +17,7 @@
 Survival or cumulative hazard curves from a nonparametric discrete frailty model chosen by automatic model selection
 }
 \examples{
-result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata20,
+result = npdf_cox( Surv(time, status) ~ x, groups = family, data = weibdata2030,
                    K = 2, eps_conv=10^-4)
 plot( result, K = 2 )
 plot( result, type = "na" )

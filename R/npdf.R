@@ -89,7 +89,7 @@
 #' @export
 #'
 #' @examples
-#' test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata20, K = 4, eps_conv=10^-4)
+#' test <- npdf_cox( Surv(time, status) ~ x, groups=family, data=weibdata2030, K = 4, eps_conv=10^-4)
 #' test    # optimal model (by all criteria) has 2 latent populations
 #' test$models[[1]] # examine alternative model with 1 latent population
 #'
